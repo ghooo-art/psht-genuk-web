@@ -19,12 +19,25 @@
             }
         }
     </script>
+    <style>
+        @media (max-width: 767px) {
+            .mobile-card-table thead { display: none; }
+            .mobile-card-table, .mobile-card-table tbody { display: block; }
+            .mobile-card-table tr { display: block; padding: .75rem 0; }
+            .mobile-card-table td { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: .65rem 1rem; text-align: right; }
+            .mobile-card-table td::before { content: attr(data-label); color: #64748b; font-size: .65rem; font-weight: 700; text-align: left; text-transform: uppercase; }
+            .mobile-card-table td:first-child { display: block; text-align: left; }
+            .mobile-card-table td:first-child::before { display: none; }
+            .mobile-card-table .detail-row td { display: block; text-align: left; }
+            .mobile-card-table .detail-row td::before { display: none; }
+        }
+    </style>
 </head>
 <body class="bg-[#FDF8FA] text-slate-800 font-sans min-h-screen flex flex-col selection:bg-pink-300 selection:text-purple-900">
 
     <!-- HEADER -->
     <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-pink-200 shadow-sm">
-        <div class="max-w-7xl mx-auto px-6 md:px-12 h-20 flex justify-between items-center">
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 md:px-12 h-20 flex justify-between items-center">
             
             <a href="index.html" class="flex items-center gap-3 group">
                 <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-100 to-pink-100 flex items-center justify-center text-purple-700 font-bold text-lg border border-pink-200 group-hover:scale-105 transition-transform">
@@ -41,11 +54,19 @@
                 <a href="data-siswa.html" class="text-purple-900 border-b-2 border-purple-900 pb-1">Data Siswa</a>
                 <a href="absensi.html" class="hover:text-pink-500 transition-colors">Absensi & Kalender</a>
             </nav>
+            <button type="button" onclick="toggleMobileMenu()" aria-label="Buka menu" aria-expanded="false" class="md:hidden w-10 h-10 rounded-xl bg-purple-50 text-purple-900 border border-pink-200 text-xl">☰</button>
         </div>
+        <nav id="mobile-menu" class="hidden md:hidden absolute top-20 left-0 right-0 bg-white border-b border-pink-200 px-4 py-3 shadow-xl">
+            <div class="flex flex-col gap-1 text-xs font-bold uppercase tracking-widest text-slate-600">
+                <a href="index.html" class="rounded-lg px-4 py-3 hover:bg-purple-50">Beranda</a>
+                <a href="data-siswa.html" class="rounded-lg px-4 py-3 bg-purple-50 text-purple-900">Data Siswa</a>
+                <a href="absensi.html" class="rounded-lg px-4 py-3 hover:bg-purple-50">Absensi & Kalender</a>
+            </div>
+        </nav>
     </header>
 
     <!-- KONTEN UTAMA -->
-    <main class="flex-1 w-full max-w-6xl mx-auto px-6 md:px-12 py-12">
+    <main class="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 md:px-12 py-8 md:py-12">
         
         <!-- Header Halaman & Pencarian -->
         <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
@@ -63,7 +84,7 @@
         <!-- TABEL UTAMA SISWA (Dibuat Dinamis dari Database) -->
         <div class="bg-white rounded-3xl border border-pink-200 shadow-sm overflow-hidden mb-8">
             <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
+                <table class="mobile-card-table w-full text-left border-collapse">
                     <thead>
                         <tr class="bg-purple-50/50 border-b border-pink-100 text-xs font-bold text-slate-400 uppercase">
                             <th class="p-4 md:p-5">Siswa</th>
@@ -137,12 +158,12 @@
                                     <p class="font-bold text-purple-950">${siswa.nama}</p>
                                 </div>
                             </td>
-                            <td class="p-4 md:p-5 text-slate-600 text-xs">${siswa.alamat}</td>
-                            <td class="p-4 md:p-5 text-slate-600 text-xs">${siswa.tempat_lahir}, ${siswa.tanggal_lahir}</td>
-                            <td class="p-4 md:p-5 text-center">
+                                <td data-label="Alamat" class="p-4 md:p-5 text-slate-600 text-xs">${siswa.alamat}</td>
+                                <td data-label="TTL" class="p-4 md:p-5 text-slate-600 text-xs">${siswa.tempat_lahir}, ${siswa.tanggal_lahir}</td>
+                                <td data-label="Sabuk" class="p-4 md:p-5 text-center">
                                 <span class="${badgeColor} px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider">${siswa.sabuk}</span>
                             </td>
-                            <td class="p-4 md:p-5 text-center">
+                                <td data-label="Aksi" class="p-4 md:p-5 text-center">
                                 <button onclick="toggleRow('${rowId}', '${iconId}')" class="bg-purple-100 text-purple-900 hover:bg-purple-200 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 mx-auto">
                                     <span>Rekap Ujian</span>
                                     <svg id="${iconId}" class="w-4 h-4 transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -154,7 +175,7 @@
                         // Template baris dropdown detail rekap bulanan
                         let trDetail = document.createElement('tr');
                         trDetail.id = rowId;
-                        trDetail.className = "hidden bg-purple-50/30 border-b border-pink-100";
+                        trDetail.className = "detail-row hidden bg-purple-50/30 border-b border-pink-100";
                         trDetail.innerHTML = `
                             <td colspan="5" class="p-6 md:px-8">
                                 <div class="space-y-3">
@@ -178,6 +199,13 @@
                 tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-rose-500">Gagal terhubung ke server / database.</td></tr>`;
             }
         });
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            const button = document.querySelector('button[aria-label="Buka menu"]');
+            const isHidden = menu.classList.toggle('hidden');
+            button.setAttribute('aria-expanded', String(!isHidden));
+        }
     </script>
 </body>
 </html>

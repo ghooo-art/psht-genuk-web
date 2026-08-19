@@ -19,12 +19,24 @@
             }
         }
     </script>
+    <style>
+        @media (max-width: 767px) {
+            .calendar-grid > div { height: 4rem; border-radius: .75rem; padding: .375rem; }
+            .mobile-card-table thead { display: none; }
+            .mobile-card-table, .mobile-card-table tbody { display: block; }
+            .mobile-card-table tr { display: block; padding: .75rem 0; }
+            .mobile-card-table td { display: flex; justify-content: space-between; gap: 1rem; padding: .65rem 1rem; text-align: right; }
+            .mobile-card-table td::before { content: attr(data-label); color: #64748b; font-size: .65rem; font-weight: 700; text-align: left; text-transform: uppercase; }
+            .mobile-card-table td:first-child { text-align: left; }
+            .mobile-card-table td:first-child::before { display: none; }
+        }
+    </style>
 </head>
 <body class="bg-[#FDF8FA] text-slate-800 font-sans min-h-screen flex flex-col selection:bg-pink-300 selection:text-purple-900">
 
     <!-- HEADER -->
     <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-pink-200 shadow-sm">
-        <div class="max-w-7xl mx-auto px-6 md:px-12 h-20 flex justify-between items-center">
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 md:px-12 h-20 flex justify-between items-center">
             
             <a href="index.html" class="flex items-center gap-3 group">
                 <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-100 to-pink-100 flex items-center justify-center text-purple-700 font-bold text-lg border border-pink-200 group-hover:scale-105 transition-transform">
@@ -41,11 +53,19 @@
                 <a href="data-siswa.html" class="hover:text-pink-500 transition-colors">Data Siswa</a>
                 <a href="absensi.html" class="text-purple-900 border-b-2 border-purple-900 pb-1">Absensi & Kalender</a>
             </nav>
+            <button type="button" onclick="toggleMobileMenu()" aria-label="Buka menu" aria-expanded="false" class="md:hidden w-10 h-10 rounded-xl bg-purple-50 text-purple-900 border border-pink-200 text-xl">☰</button>
         </div>
+        <nav id="mobile-menu" class="hidden md:hidden absolute top-20 left-0 right-0 bg-white border-b border-pink-200 px-4 py-3 shadow-xl">
+            <div class="flex flex-col gap-1 text-xs font-bold uppercase tracking-widest text-slate-600">
+                <a href="index.html" class="rounded-lg px-4 py-3 hover:bg-purple-50">Beranda</a>
+                <a href="data-siswa.html" class="rounded-lg px-4 py-3 hover:bg-purple-50">Data Siswa</a>
+                <a href="absensi.html" class="rounded-lg px-4 py-3 bg-purple-50 text-purple-900">Absensi & Kalender</a>
+            </div>
+        </nav>
     </header>
 
     <!-- KONTEN UTAMA -->
-    <main class="flex-1 w-full max-w-6xl mx-auto px-6 md:px-12 py-10">
+    <main class="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 md:px-12 py-6 md:py-10">
         
         <!-- VIEW 1: TAMPILAN KALENDER 1 BULAN PENUH -->
         <div id="view-kalender" class="space-y-8">
@@ -62,7 +82,7 @@
             </div>
 
             <!-- Grid Kalender Full 1 Bulan -->
-            <div class="bg-white rounded-3xl border border-pink-200 shadow-sm p-6 md:p-8">
+            <div class="bg-white rounded-3xl border border-pink-200 shadow-sm p-4 sm:p-6 md:p-8">
                 
                 <!-- Nama Hari -->
                 <div class="grid grid-cols-7 gap-2 text-center text-xs font-bold text-slate-400 uppercase mb-4">
@@ -76,9 +96,9 @@
                 </div>
 
                 <!-- Angka Tanggal -->
-                <div class="grid grid-cols-7 gap-2 text-sm">
-                    <div class="h-24 rounded-2xl bg-slate-50/40 border border-slate-100 p-2 text-slate-300">31</div>
-                    <div onclick="bukaAbsensi('2026-06-01', 'Senin, 1 Juni 2026')" class="h-24 rounded-2xl bg-white border border-pink-100 p-2 text-slate-700 font-bold flex flex-col justify-between cursor-pointer hover:border-purple-400 hover:shadow-sm transition-all"><span>1</span></div>
+                <div class="calendar-grid grid grid-cols-7 gap-1 sm:gap-2 text-xs sm:text-sm">
+                    <div class="h-16 sm:h-24 rounded-xl sm:rounded-2xl bg-slate-50/40 border border-slate-100 p-1.5 sm:p-2 text-slate-300">31</div>
+                    <div onclick="bukaAbsensi('2026-06-01', 'Senin, 1 Juni 2026')" class="h-16 sm:h-24 rounded-xl sm:rounded-2xl bg-white border border-pink-100 p-1.5 sm:p-2 text-slate-700 font-bold flex flex-col justify-between cursor-pointer hover:border-purple-400 hover:shadow-sm transition-all"><span>1</span></div>
                     <div onclick="bukaAbsensi('2026-06-02', 'Selasa, 2 Juni 2026')" class="h-24 rounded-2xl bg-white border border-pink-100 p-2 text-slate-700 font-bold flex flex-col justify-between cursor-pointer hover:border-purple-400 hover:shadow-sm transition-all"><span>2</span></div>
                     <div onclick="bukaAbsensi('2026-06-03', 'Rabu, 3 Juni 2026')" class="h-24 rounded-2xl bg-white border border-pink-100 p-2 text-slate-700 font-bold flex flex-col justify-between cursor-pointer hover:border-purple-400 hover:shadow-sm transition-all"><span>3</span></div>
                     <div onclick="bukaAbsensi('2026-06-04', 'Kamis, 4 Juni 2026')" class="h-24 rounded-2xl bg-white border border-pink-100 p-2 text-slate-700 font-bold flex flex-col justify-between cursor-pointer hover:border-purple-400 hover:shadow-sm transition-all"><span>4</span></div>
@@ -131,7 +151,7 @@
                 </div>
 
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
+                    <table class="mobile-card-table w-full text-left border-collapse">
                         <thead>
                             <tr class="border-b border-pink-100 text-xs font-bold text-slate-400 uppercase bg-slate-50/50">
                                 <th class="p-4">Nama Siswa</th>
@@ -218,10 +238,10 @@
                         tr.className = "hover:bg-pink-50/30";
                         tr.innerHTML = `
                             <td class="p-4 font-bold text-purple-950">${siswa.nama}</td>
-                            <td class="p-4 text-center text-slate-400">0</td>
-                            <td class="p-4 text-center text-slate-400">0</td>
-                            <td class="p-4 text-center text-slate-400">0</td>
-                            <td class="p-4 text-center"><span class="bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg text-xs font-bold">0%</span></td>
+                                <td data-label="Hadir" class="p-4 text-center text-slate-400">0</td>
+                                <td data-label="Izin" class="p-4 text-center text-slate-400">0</td>
+                                <td data-label="Alpha" class="p-4 text-center text-slate-400">0</td>
+                                <td data-label="Persentase" class="p-4 text-center"><span class="bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg text-xs font-bold">0%</span></td>
                         `;
                         tbody.appendChild(tr);
                     });
@@ -266,10 +286,10 @@
                                     <span class="text-xs text-slate-500 font-medium">${siswa.sabuk}</span>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
-                                <button onclick="setStatus(this, 'hadir')" class="status-btn px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider bg-slate-100 text-slate-600 hover:bg-green-100 transition-all" data-status="hadir">Hadir (✔)</button>
-                                <button onclick="setStatus(this, 'izin')" class="status-btn px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider bg-slate-100 text-slate-600 hover:bg-amber-100 transition-all" data-status="izin">Izin (I)</button>
-                                <button onclick="setStatus(this, 'alpha')" class="status-btn px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider bg-slate-100 text-slate-600 hover:bg-rose-100 transition-all" data-status="alpha">Alpha (A)</button>
+                            <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+                                <button onclick="setStatus(this, 'hadir')" class="status-btn flex-1 sm:flex-none px-3 sm:px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold uppercase tracking-wider bg-slate-100 text-slate-600 hover:bg-green-100 transition-all" data-status="hadir">Hadir (✔)</button>
+                                <button onclick="setStatus(this, 'izin')" class="status-btn flex-1 sm:flex-none px-3 sm:px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold uppercase tracking-wider bg-slate-100 text-slate-600 hover:bg-amber-100 transition-all" data-status="izin">Izin (I)</button>
+                                <button onclick="setStatus(this, 'alpha')" class="status-btn flex-1 sm:flex-none px-3 sm:px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold uppercase tracking-wider bg-slate-100 text-slate-600 hover:bg-rose-100 transition-all" data-status="alpha">Alpha (A)</button>
                             </div>
                         `;
                         container.appendChild(itemDiv);
@@ -295,15 +315,15 @@
             const buttons = container.querySelectorAll('.status-btn');
             
             buttons.forEach(b => {
-                b.className = "status-btn px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider bg-slate-100 text-slate-600 transition-all";
+                b.className = "status-btn flex-1 sm:flex-none px-3 sm:px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold uppercase tracking-wider bg-slate-100 text-slate-600 transition-all";
             });
 
             if(type === 'hadir') {
-                btn.className = "status-btn px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider bg-green-600 text-white shadow-sm transition-all";
+                btn.className = "status-btn flex-1 sm:flex-none px-3 sm:px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold uppercase tracking-wider bg-green-600 text-white shadow-sm transition-all";
             } else if(type === 'izin') {
-                btn.className = "status-btn px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider bg-amber-500 text-white shadow-sm transition-all";
+                btn.className = "status-btn flex-1 sm:flex-none px-3 sm:px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold uppercase tracking-wider bg-amber-500 text-white shadow-sm transition-all";
             } else if(type === 'alpha') {
-                btn.className = "status-btn px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider bg-rose-500 text-white shadow-sm transition-all";
+                btn.className = "status-btn flex-1 sm:flex-none px-3 sm:px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold uppercase tracking-wider bg-rose-500 text-white shadow-sm transition-all";
             }
             
             // Simpan status pilihan pada tombol yang aktif
@@ -345,6 +365,13 @@
 
             alert(`Absensi berhasil disimpan untuk ${successCount} siswa!`);
             kembaliKeKalender();
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            const button = document.querySelector('button[aria-label="Buka menu"]');
+            const isHidden = menu.classList.toggle('hidden');
+            button.setAttribute('aria-expanded', String(!isHidden));
         }
     </script>
 </body>
