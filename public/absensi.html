@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalender & Absensi - PSHT Ranting Genuk</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        lotusPink: '#FBCFE8',
+                        lotusSoft: '#FDF8FA',
+                        lotusPurple: '#7E22CE',
+                        lotusDark: '#2E1065', 
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-[#FDF8FA] text-slate-800 font-sans min-h-screen flex flex-col selection:bg-pink-300 selection:text-purple-900">
+
+    <!-- HEADER -->
+    <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-pink-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-6 md:px-12 h-20 flex justify-between items-center">
+            
+            <a href="index.html" class="flex items-center gap-3 group">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-100 to-pink-100 flex items-center justify-center text-purple-700 font-bold text-lg border border-pink-200 group-hover:scale-105 transition-transform">
+                    🌸
+                </div>
+                <div>
+                    <h1 class="font-bold text-purple-950 text-base tracking-wider uppercase leading-none mb-1">PSHT Genuk</h1>
+                    <p class="text-[9px] text-pink-600 uppercase tracking-widest font-bold">Ranting Pendataan</p>
+                </div>
+            </a>
+
+            <nav class="hidden md:flex items-center gap-8 text-xs font-bold uppercase tracking-widest text-slate-500">
+                <a href="index.html" class="hover:text-pink-500 transition-colors">Beranda</a>
+                <a href="data-siswa.html" class="hover:text-pink-500 transition-colors">Data Siswa</a>
+                <a href="absensi.html" class="text-purple-900 border-b-2 border-purple-900 pb-1">Absensi & Kalender</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- KONTEN UTAMA -->
+    <main class="flex-1 w-full max-w-6xl mx-auto px-6 md:px-12 py-10">
+        
+        <!-- VIEW 1: TAMPILAN KALENDER 1 BULAN PENUH -->
+        <div id="view-kalender" class="space-y-8">
+            
+            <!-- Header Bulan -->
+            <div class="bg-gradient-to-r from-purple-950 to-purple-900 rounded-3xl p-6 md:p-8 text-white shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <span class="text-pink-300 font-mono text-xs uppercase tracking-widest block mb-1">Pilih Tanggal Latihan</span>
+                    <h2 class="text-2xl md:text-3xl font-black tracking-tight">Juni 2026</h2>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs bg-white/10 px-3 py-1.5 rounded-xl border border-white/25">Klik tanggal mana saja untuk mulai absen</span>
+                </div>
+            </div>
+
+            <!-- Grid Kalender Full 1 Bulan -->
+            <div class="bg-white rounded-3xl border border-pink-200 shadow-sm p-6 md:p-8">
+                
+                <!-- Nama Hari -->
+                <div class="grid grid-cols-7 gap-2 text-center text-xs font-bold text-slate-400 uppercase mb-4">
+                    <div>Min</div>
+                    <div>Sen</div>
+                    <div>Sel</div>
+                    <div>Rab</div>
+                    <div>Kam</div>
+                    <div>Jum</div>
+                    <div>Sab</div>
+                </div>
+
+                <!-- Angka Tanggal -->
+                <div class="grid grid-cols-7 gap-2 text-sm">
+                    <div class="h-24 rounded-2xl bg-slate-50/40 border border-slate-100 p-2 text-slate-300">31</div>
+                    <div onclick="bukaAbsensi('2026-06-01', 'Senin, 1 Juni 2026')" class="h-24 rounded-2xl bg-white border border-pink-100 p-2 text-slate-700 font-bold flex flex-col justify-between cursor-pointer hover:border-purple-400 hover:shadow-sm transition-all"><span>1</span></div>
+                    <div onclick="bukaAbsensi('2026-06-02', 'Selasa, 2 Juni 2026')" class="h-24 rounded-2xl bg-white border border-pink-100 p-2 text-slate-700 font-bold flex flex-col justify-between cursor-pointer hover:border-purple-400 hover:shadow-sm transition-all"><span>2</span></div>
+                    <div onclick="bukaAbsensi('2026-06-03', 'Rabu, 3 Juni 2026')" class="h-24 rounded-2xl bg-white border border-pink-100 p-2 text-slate-700 font-bold flex flex-col justify-between cursor-pointer hover:border-purple-400 hover:shadow-sm transition-all"><span>3</span></div>
+                    <div onclick="bukaAbsensi('2026-06-04', 'Kamis, 4 Juni 2026')" class="h-24 rounded-2xl bg-white border border-pink-100 p-2 text-slate-700 font-bold flex flex-col justify-between cursor-pointer hover:border-purple-400 hover:shadow-sm transition-all"><span>4</span></div>
+                    <div onclick="bukaAbsensi('2026-06-05', 'Jumat, 5 Juni 2026')" class="h-24 rounded-2xl bg-white border border-pink-100 p-2 text-slate-700 font-bold flex flex-col justify-between cursor-pointer hover:border-purple-400 hover:shadow-sm transition-all"><span>5</span></div>
+                    <div onclick="bukaAbsensi('2026-06-06', 'Sabtu, 6 Juni 2026')" class="h-24 rounded-2xl bg-white border border-pink-100 p-2 text-slate-700 font-bold flex flex-col justify-between cursor-pointer hover:border-purple-400 hover:shadow-sm transition-all"><span>6</span></div>
+
+                    <div onclick="bukaAbsensi('2026-06-07', 'Minggu, 7 Juni 2026')" class="h-24 rounded-2xl bg-white border border-pink-100 p-2 text-slate-700 font-bold flex flex-col justify-between cursor-pointer hover:border-purple-400 hover:shadow-sm transition-all"><span>7</span></div>
+                    <div onclick="bukaAbsensi('2026-06-08', 'Senin, 8 Juni 2026')" class="h-24 rounded-2xl bg-white border border-pink-100 p-2 text-slate-700 font-bold flex flex-col justify-between cursor-pointer hover:border-purple-400 hover:shadow-sm transition-all"><span>8</span></div>
+                    <div onclick="bukaAbsensi('2026-06-09', 'Selasa, 9 Juni 2026')" class="h-24 rounded-2xl bg-white border border-pink-100 p-2 text-slate-700 font-bold flex flex-col justify-between cursor-pointer hover:border-purple-400 hover:shadow-sm transition-all"><span>9</span></div>
+                    <div onclick="bukaAbsensi('2026-06-10', 'Rabu, 10 Juni 2026')" class="h-24 rounded-2xl bg-white border border-pink-100 p-2 text-slate-700 font-bold flex flex-col justify-between cursor-pointer hover:border-purple-400 hover:shadow-sm transition-all"><span>10</span></div>
+                    <div onclick="bukaAbsensi('2026-06-11', 'Kamis, 11 Juni 2026')" class="h-24 rounded-2xl bg-white border border-pink-100 p-2 text-slate-700 font-bold flex flex-col justify-between cursor-pointer hover:border-purple-400 hover:shadow-sm transition-all"><span>11</span></div>
+                    <div onclick="bukaAbsensi('2026-06-12', 'Jumat, 12 Juni 2026')" class="h-24 rounded-2xl bg-white border border-pink-100 p-2 text-slate-700 font-bold flex flex-col justify-between cursor-pointer hover:border-purple-400 hover:shadow-sm transition-all"><span>12</span></div>
+                    <div onclick="bukaAbsensi('2026-06-13', 'Sabtu, 13 Juni 2026')" class="h-24 rounded-2xl bg-white border border-pink-100 p-2 text-slate-700 font-bold flex flex-col justify-between cursor-pointer hover:border-purple-400 hover:shadow-sm transition-all"><span>13</span></div>
+
+                    <div onclick="bukaAbsensi('2026-06-14', 'Minggu, 14 Juni 2026')" class="h-24 rounded-2xl bg-white border border-pink-100 p-2 text-slate-700 font-bold flex flex-col justify-between cursor-pointer hover:border-purple-400 hover:shadow-sm transition-all"><span>14</span></div>
+                    <div onclick="bukaAbsensi('2026-06-15', 'Senin, 15 Juni 2026')" class="h-24 rounded-2xl bg-white border border-pink-100 p-2 text-slate-700 font-bold flex flex-col justify-between cursor-pointer hover:border-purple-400 hover:shadow-sm transition-all"><span>15</span></div>
+                    <div onclick="bukaAbsensi('2026-06-16', 'Selasa, 16 Juni 2026')" class="h-24 rounded-2xl bg-white border border-pink-100 p-2 text-slate-700 font-bold flex flex-col justify-between cursor-pointer hover:border-purple-400 hover:shadow-sm transition-all"><span>16</span></div>
+                    <div onclick="bukaAbsensi('2026-06-17', 'Rabu, 17 Juni 2026')" class="h-24 rounded-2xl bg-white border border-pink-100 p-2 text-slate-700 font-bold flex flex-col justify-between cursor-pointer hover:border-purple-400 hover:shadow-sm transition-all"><span>17</span></div>
+                    <div onclick="bukaAbsensi('2026-06-18', 'Kamis, 18 Juni 2026')" class="h-24 rounded-2xl bg-white border border-pink-100 p-2 text-slate-700 font-bold flex flex-col justify-between cursor-pointer hover:border-purple-400 hover:shadow-sm transition-all"><span>18</span></div>
+                    <div onclick="bukaAbsensi('2026-06-19', 'Jumat, 19 Juni 2026')" class="h-24 rounded-2xl bg-white border border-pink-100 p-2 text-slate-700 font-bold flex flex-col justify-between cursor-pointer hover:border-purple-400 hover:shadow-sm transition-all"><span>19</span></div>
+                    <div onclick="bukaAbsensi('2026-06-20', 'Sabtu, 20 Juni 2026')" class="h-24 rounded-2xl bg-white border border-pink-100 p-2 text-slate-700 font-bold flex flex-col justify-between cursor-pointer hover:border-purple-400 hover:shadow-sm transition-all"><span>20</span></div>
+
+                    <div onclick="bukaAbsensi('2026-06-21', 'Minggu, 21 Juni 2026')" class="h-24 rounded-2xl bg-white border border-pink-100 p-2 text-slate-700 font-bold flex flex-col justify-between cursor-pointer hover:border-purple-400 hover:shadow-sm transition-all"><span>21</span></div>
+                    <div onclick="bukaAbsensi('2026-06-22', 'Senin, 22 Juni 2026')" class="h-24 rounded-2xl bg-white border border-pink-100 p-2 text-slate-700 font-bold flex flex-col justify-between cursor-pointer hover:border-purple-400 hover:shadow-sm transition-all"><span>22</span></div>
+                    <div onclick="bukaAbsensi('2026-06-23', 'Selasa, 23 Juni 2026')" class="h-24 rounded-2xl bg-white border border-pink-100 p-2 text-slate-700 font-bold flex flex-col justify-between cursor-pointer hover:border-purple-400 hover:shadow-sm transition-all"><span>23</span></div>
+                    <div onclick="bukaAbsensi('2026-06-24', 'Rabu, 24 Juni 2026')" class="h-24 rounded-2xl bg-white border border-pink-100 p-2 text-slate-700 font-bold flex flex-col justify-between cursor-pointer hover:border-purple-400 hover:shadow-sm transition-all"><span>24</span></div>
+                    <div onclick="bukaAbsensi('2026-06-25', 'Kamis, 25 Juni 2026')" class="h-24 rounded-2xl bg-white border border-pink-100 p-2 text-slate-700 font-bold flex flex-col justify-between cursor-pointer hover:border-purple-400 hover:shadow-sm transition-all"><span>25</span></div>
+                    <div onclick="bukaAbsensi('2026-06-26', 'Jumat, 26 Juni 2026')" class="h-24 rounded-2xl bg-white border border-pink-100 p-2 text-slate-700 font-bold flex flex-col justify-between cursor-pointer hover:border-purple-400 hover:shadow-sm transition-all"><span>26</span></div>
+                    <div onclick="bukaAbsensi('2026-06-27', 'Sabtu, 27 Juni 2026')" class="h-24 rounded-2xl bg-white border border-pink-100 p-2 text-slate-700 font-bold flex flex-col justify-between cursor-pointer hover:border-purple-400 hover:shadow-sm transition-all"><span>27</span></div>
+
+                    <div onclick="bukaAbsensi('2026-06-28', 'Minggu, 28 Juni 2026')" class="h-24 rounded-2xl bg-white border border-pink-100 p-2 text-slate-700 font-bold flex flex-col justify-between cursor-pointer hover:border-purple-400 hover:shadow-sm transition-all"><span>28</span></div>
+                    <div onclick="bukaAbsensi('2026-06-29', 'Senin, 29 Juni 2026')" class="h-24 rounded-2xl bg-white border border-pink-100 p-2 text-slate-700 font-bold flex flex-col justify-between cursor-pointer hover:border-purple-400 hover:shadow-sm transition-all"><span>29</span></div>
+                    <div onclick="bukaAbsensi('2026-06-30', 'Selasa, 30 Juni 2026')" class="h-24 rounded-2xl bg-white border border-pink-100 p-2 text-slate-700 font-bold flex flex-col justify-between cursor-pointer hover:border-purple-400 hover:shadow-sm transition-all"><span>30</span></div>
+                    
+                    <div class="h-24 rounded-2xl bg-slate-50/30 border border-slate-100 opacity-30 p-2">1</div>
+                    <div class="h-24 rounded-2xl bg-slate-50/30 border border-slate-100 opacity-30 p-2">2</div>
+                    <div class="h-24 rounded-2xl bg-slate-50/30 border border-slate-100 opacity-30 p-2">3</div>
+                    <div class="h-24 rounded-2xl bg-slate-50/30 border border-slate-100 opacity-30 p-2">4</div>
+                </div>
+            </div>
+
+            <!-- REKAPITULASI BULANAN (Dinamis dari Database) -->
+            <div class="bg-white rounded-3xl border border-pink-200 shadow-sm overflow-hidden p-6 md:p-8">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-2">
+                    <div>
+                        <span class="text-pink-500 font-mono text-xs uppercase tracking-widest block mb-1 font-bold">// LAPORAN AKUMULASI</span>
+                        <h3 class="text-2xl font-black uppercase tracking-tight text-purple-950">Rekapitulasi Kehadiran Bulan Ini</h3>
+                    </div>
+                    <span class="text-xs text-purple-700 font-bold bg-pink-100 px-3 py-1.5 rounded-xl">Total Sesi Terlaksana: 0</span>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-pink-100 text-xs font-bold text-slate-400 uppercase bg-slate-50/50">
+                                <th class="p-4">Nama Siswa</th>
+                                <th class="p-4 text-center">Hadir (✔)</th>
+                                <th class="p-4 text-center">Izin (I)</th>
+                                <th class="p-4 text-center">Alpha (A)</th>
+                                <th class="p-4 text-center">Persentase Kehadiran</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabel-rekap-body" class="divide-y divide-pink-100 text-sm">
+                            <tr>
+                                <td colspan="5" class="p-6 text-center text-slate-400">Memuat data rekapitulasi dari database...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+
+        <!-- VIEW 2: TABEL ABSENSI HARIAN -->
+        <div id="view-absensi" class="hidden space-y-6">
+            
+            <button onclick="kembaliKeKalender()" class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-purple-800 bg-purple-100/60 px-4 py-2.5 rounded-xl hover:bg-purple-200 transition-colors">
+                ← Kembali ke Kalender Bulan
+            </button>
+
+            <div class="bg-white p-6 md:p-8 rounded-3xl border border-pink-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <span class="text-pink-500 font-mono text-xs uppercase tracking-widest block mb-1 font-bold">// FORM INPUT ABSENSI</span>
+                    <h2 id="teks-tanggal" class="text-2xl md:text-3xl font-black text-purple-950">Tanggal Dipilih</h2>
+                </div>
+                <div class="bg-purple-50 text-purple-900 px-4 py-2 rounded-xl text-xs font-bold border border-purple-200" id="badge-tanggal-db" data-tanggal="">
+                    Sesi Latihan Ranting Genuk
+                </div>
+            </div>
+
+            <!-- Daftar Siswa (Dinamis dari Database) -->
+            <div class="bg-white rounded-3xl border border-pink-200 shadow-sm overflow-hidden">
+                <div class="p-5 border-b border-pink-100 bg-purple-50/30 flex justify-between items-center">
+                    <h4 class="font-bold text-purple-950 text-sm uppercase tracking-wider">Absen Kehadiran Siswa</h4>
+                    <span class="text-xs text-slate-500">Klik tombol status (Hadir / Izin / Alpha)</span>
+                </div>
+
+                <div id="list-absensi-siswa" class="divide-y divide-pink-100">
+                    <div class="p-6 text-center text-slate-400">Memuat daftar siswa...</div>
+                </div>
+
+                <div class="p-5 bg-pink-50/30 border-t border-pink-100 flex justify-end">
+                    <button onclick="simpanSemuaAbsensi()" class="bg-gradient-to-r from-purple-700 to-pink-600 text-white px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-wider shadow-md hover:from-purple-800 hover:to-pink-700 transition-all">
+                        Simpan Absensi Tanggal Ini
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="border-t border-pink-200 py-8 mt-auto text-center text-xs text-slate-500 font-mono bg-[#FDF8FA]">
+        <p>PSHT RANTING GENUK © 2026 • KALENDER & ABSENSI LATIHAN</p>
+    </footer>
+
+    <!-- SCRIPT INTERAKTIF DINAMIS DATABASE -->
+    <script>
+        let selectedDateStr = "";
+
+        document.addEventListener("DOMContentLoaded", function() {
+            loadRekapAbsensi();
+        });
+
+        async function loadRekapAbsensi() {
+            const tbody = document.getElementById('tabel-rekap-body');
+            try {
+                const response = await fetch('/api/siswa');
+                const dataSiswa = await response.json();
+
+                if (dataSiswa && dataSiswa.length > 0) {
+                    tbody.innerHTML = "";
+                    dataSiswa.forEach(siswa => {
+                        let tr = document.createElement('tr');
+                        tr.className = "hover:bg-pink-50/30";
+                        tr.innerHTML = `
+                            <td class="p-4 font-bold text-purple-950">${siswa.nama}</td>
+                            <td class="p-4 text-center text-slate-400">0</td>
+                            <td class="p-4 text-center text-slate-400">0</td>
+                            <td class="p-4 text-center text-slate-400">0</td>
+                            <td class="p-4 text-center"><span class="bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg text-xs font-bold">0%</span></td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400">Belum ada data siswa di database.</td></tr>`;
+                }
+            } catch (error) {
+                console.error("Gagal memuat rekap:", error);
+                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-rose-500">Gagal terhubung ke database.</td></tr>`;
+            }
+        }
+
+        async function bukaAbsensi(rawDate, tanggalStr) {
+            selectedDateStr = rawDate;
+            document.getElementById('view-kalender').classList.add('hidden');
+            document.getElementById('view-absensi').classList.remove('hidden');
+            document.getElementById('teks-tanggal').innerText = tanggalStr;
+            document.getElementById('badge-tanggal-db').setAttribute('data-tanggal', rawDate);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // Muat daftar siswa untuk diabsen
+            const container = document.getElementById('list-absensi-siswa');
+            container.innerHTML = `<div class="p-6 text-center text-slate-400">Memuat daftar siswa...</div>`;
+
+            try {
+                const response = await fetch('/api/siswa');
+                const dataSiswa = await response.json();
+
+                if (dataSiswa && dataSiswa.length > 0) {
+                    container.innerHTML = "";
+                    dataSiswa.forEach(siswa => {
+                        const inisial = siswa.nama.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase();
+                        
+                        let itemDiv = document.createElement('div');
+                        itemDiv.className = "p-4 md:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 siswa-absensi-item";
+                        itemDiv.setAttribute('data-siswa-id', siswa.id);
+                        itemDiv.innerHTML = `
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center font-bold text-purple-700 text-xs">${inisial}</div>
+                                <div>
+                                    <h5 class="font-bold text-purple-950 text-base">${siswa.nama}</h5>
+                                    <span class="text-xs text-slate-500 font-medium">${siswa.sabuk}</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                                <button onclick="setStatus(this, 'hadir')" class="status-btn px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider bg-slate-100 text-slate-600 hover:bg-green-100 transition-all" data-status="hadir">Hadir (✔)</button>
+                                <button onclick="setStatus(this, 'izin')" class="status-btn px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider bg-slate-100 text-slate-600 hover:bg-amber-100 transition-all" data-status="izin">Izin (I)</button>
+                                <button onclick="setStatus(this, 'alpha')" class="status-btn px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider bg-slate-100 text-slate-600 hover:bg-rose-100 transition-all" data-status="alpha">Alpha (A)</button>
+                            </div>
+                        `;
+                        container.appendChild(itemDiv);
+                    });
+                } else {
+                    container.innerHTML = `<div class="p-6 text-center text-slate-400">Tidak ada siswa ditemukan di database.</div>`;
+                }
+            } catch (error) {
+                console.error("Gagal memuat siswa untuk absensi:", error);
+                container.innerHTML = `<div class="p-6 text-center text-rose-500">Gagal memuat daftar siswa.</div>`;
+            }
+        }
+
+        function kembaliKeKalender() {
+            document.getElementById('view-absensi').classList.add('hidden');
+            document.getElementById('view-kalender').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            loadRekapAbsensi(); // Refresh rekap saat kembali
+        }
+
+        function setStatus(btn, type) {
+            const container = btn.parentElement;
+            const buttons = container.querySelectorAll('.status-btn');
+            
+            buttons.forEach(b => {
+                b.className = "status-btn px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider bg-slate-100 text-slate-600 transition-all";
+            });
+
+            if(type === 'hadir') {
+                btn.className = "status-btn px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider bg-green-600 text-white shadow-sm transition-all";
+            } else if(type === 'izin') {
+                btn.className = "status-btn px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider bg-amber-500 text-white shadow-sm transition-all";
+            } else if(type === 'alpha') {
+                btn.className = "status-btn px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider bg-rose-500 text-white shadow-sm transition-all";
+            }
+            
+            // Simpan status pilihan pada tombol yang aktif
+            container.setAttribute('data-selected-status', type);
+        }
+
+        async function simpanSemuaAbsensi() {
+            const items = document.querySelectorAll('.siswa-absensi-item');
+            const tanggal = selectedDateStr;
+
+            if (!tanggal) {
+                alert("Tanggal belum dipilih!");
+                return;
+            }
+
+            let successCount = 0;
+
+            for (let item of items) {
+                const siswaId = item.getAttribute('data-siswa-id');
+                const status = item.querySelector('.flex.items-center.gap-2').getAttribute('data-selected-status');
+
+                if (status) {
+                    try {
+                        await fetch('/api/absensi', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                siswa_id: siswaId,
+                                tanggal: tanggal,
+                                status: status
+                            })
+                        });
+                        successCount++;
+                    } catch (err) {
+                        console.error("Gagal mengirim absensi untuk siswa ID:", siswaId);
+                    }
+                }
+            }
+
+            alert(`Absensi berhasil disimpan untuk ${successCount} siswa!`);
+            kembaliKeKalender();
+        }
+    </script>
+</body>
+</html>
