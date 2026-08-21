@@ -1,10 +1,16 @@
 package handler
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
 	"encoding/json"
 	"net/http"
 	"os"
+	"strconv"
+	"strings"
+	"time"
 
 	_ "github.com/lib/pq"
 )
@@ -44,6 +50,11 @@ type Pelatih struct {
 	Status       string `json:"status"`
 }
 
+type adminLogin struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
 func Handler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -58,10 +69,34 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 
 	// Routing berdasarkan Path URL
 	switch r.URL.Path {
+	case "/api/admin/login":
+		if r.Method == http.MethodPost {
+			loginAdmin(w, r)
+		} else {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	case "/api/admin/logout":
+		logoutAdmin(w, r)
+	case "/api/admin/session":
+		if requireAdmin(w, r) {
+			json.NewEncoder(w).Encode(map[string]string{"status": "sukses"})
+		}
+	case "/api/admin/siswa":
+		if requireAdmin(w, r) && r.Method == http.MethodPost {
+			createSiswa(w, r)
+		}
+	case "/api/admin/pengurus":
+		if requireAdmin(w, r) && r.Method == http.MethodPost {
+			createPengurus(w, r)
+		}
+	case "/api/admin/pelatih":
+		if requireAdmin(w, r) && r.Method == http.MethodPost {
+			createPelatih(w, r)
+		}
 	case "/api/siswa":
 		getSiswa(w, r)
 	case "/api/absensi":
-		if r.Method == http.MethodPost {
+		if requireAdmin(w, r) && r.Method == http.MethodPost {
 			simpanAbsensi(w, r)
 		} else {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -74,6 +109,114 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"message": "Backend Go PSHT Ranting Genuk Berjalan Normal!"}`))
 	}
+}
+
+func loginAdmin(w http.ResponseWriter, r *http.Request) {
+	var input adminLogin
+	if os.Getenv("ADMIN_USERNAME") == "" || os.Getenv("ADMIN_PASSWORD") == "" || os.Getenv("ADMIN_SESSION_SECRET") == "" || json.NewDecoder(r.Body).Decode(&input) != nil || input.Username != os.Getenv("ADMIN_USERNAME") || input.Password != os.Getenv("ADMIN_PASSWORD") {
+		http.Error(w, `{"error":"Username atau password salah"}`, http.StatusUnauthorized)
+		return
+	}
+
+	token := adminToken(time.Now().Unix())
+	http.SetCookie(w, &http.Cookie{Name: "admin_session", Value: token, Path: "/", HttpOnly: true, Secure: true, SameSite: http.SameSiteLaxMode, MaxAge: 8 * 60 * 60})
+	json.NewEncoder(w).Encode(map[string]string{"status": "sukses"})
+}
+
+func logoutAdmin(w http.ResponseWriter, r *http.Request) {
+	http.SetCookie(w, &http.Cookie{Name: "admin_session", Value: "", Path: "/", HttpOnly: true, Secure: true, MaxAge: -1})
+	json.NewEncoder(w).Encode(map[string]string{"status": "sukses"})
+}
+
+func requireAdmin(w http.ResponseWriter, r *http.Request) bool {
+	cookie, err := r.Cookie("admin_session")
+	if err != nil || !validAdminToken(cookie.Value) {
+		http.Error(w, `{"error":"Akses admin diperlukan"}`, http.StatusUnauthorized)
+		return false
+	}
+	return true
+}
+
+func adminToken(timestamp int64) string {
+	value := strconv.FormatInt(timestamp, 10)
+	h := hmac.New(sha256.New, []byte(os.Getenv("ADMIN_SESSION_SECRET")))
+	h.Write([]byte(value))
+	return value + "." + hex.EncodeToString(h.Sum(nil))
+}
+
+func validAdminToken(token string) bool {
+	if os.Getenv("ADMIN_SESSION_SECRET") == "" {
+		return false
+	}
+	parts := strings.Split(token, ".")
+	if len(parts) != 2 {
+		return false
+	}
+	timestamp, err := strconv.ParseInt(parts[0], 10, 64)
+	if err != nil || time.Now().Unix()-timestamp > 8*60*60 || timestamp > time.Now().Unix() {
+		return false
+	}
+	return hmac.Equal([]byte(parts[1]), []byte(strings.Split(adminToken(timestamp), ".")[1]))
+}
+
+func createSiswa(w http.ResponseWriter, r *http.Request) {
+	var s Siswa
+	if json.NewDecoder(r.Body).Decode(&s) != nil || s.Nama == "" {
+		http.Error(w, `{"error":"Data siswa tidak valid"}`, http.StatusBadRequest)
+		return
+	}
+	db, err := connectDB()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+	_, err = db.Exec("INSERT INTO siswa (nama, alamat, tempat_lahir, tanggal_lahir, sabuk) VALUES ($1, $2, $3, $4, $5)", s.Nama, s.Alamat, s.TempatLahir, s.TanggalLahir, s.Sabuk)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	json.NewEncoder(w).Encode(map[string]string{"status": "sukses"})
+}
+
+func createPengurus(w http.ResponseWriter, r *http.Request) {
+	var p Pengurus
+	if json.NewDecoder(r.Body).Decode(&p) != nil || p.Nama == "" || p.Jabatan == "" {
+		http.Error(w, `{"error":"Data pengurus tidak valid"}`, http.StatusBadRequest)
+		return
+	}
+	db, err := connectDB()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+	_, err = db.Exec("INSERT INTO pengurus (jabatan, nama, keterangan) VALUES ($1, $2, $3)", p.Jabatan, p.Nama, p.Keterangan)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	json.NewEncoder(w).Encode(map[string]string{"status": "sukses"})
+}
+
+func createPelatih(w http.ResponseWriter, r *http.Request) {
+	var p Pelatih
+	if json.NewDecoder(r.Body).Decode(&p) != nil || p.Nama == "" {
+		http.Error(w, `{"error":"Data pelatih tidak valid"}`, http.StatusBadRequest)
+		return
+	}
+	db, err := connectDB()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+	_, err = db.Exec("INSERT INTO pelatih (nama, tingkatan, spesialisasi, kontak, status) VALUES ($1, $2, $3, $4, $5)", p.Nama, p.Tingkatan, p.Spesialisasi, p.Kontak, p.Status)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	json.NewEncoder(w).Encode(map[string]string{"status": "sukses"})
 }
 
 // 1. Endpoint GET: Mengambil seluruh data siswa dari Supabase
@@ -120,7 +263,7 @@ func simpanAbsensi(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = db.Exec("INSERT INTO absensi (siswa_id, tanggal, status) VALUES ($1, $2, $3)", 
+	_, err = db.Exec("INSERT INTO absensi (siswa_id, tanggal, status) VALUES ($1, $2, $3)",
 		abs.SiswaID, abs.Tanggal, abs.Status)
 	if err != nil {
 		http.Error(w, `{"error": "`+err.Error()+`"}`, http.StatusInternalServerError)

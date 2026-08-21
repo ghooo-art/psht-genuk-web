@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - PSHT Ranting Genuk</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-[#FDF8FA] text-slate-800 font-sans">
+    <main class="min-h-screen flex items-center justify-center p-4 sm:p-6">
+        <section id="login-panel" class="w-full max-w-md bg-white rounded-3xl border border-pink-200 shadow-xl p-6 sm:p-8">
+            <div class="mb-8">
+                <p class="text-pink-500 font-mono text-xs uppercase tracking-widest font-bold">// AREA ADMIN</p>
+                <h1 class="text-3xl font-black uppercase text-purple-950 mt-2">Masuk Admin</h1>
+                <p class="text-sm text-slate-500 mt-2">Kelola data PSHT Ranting Genuk.</p>
+            </div>
+            <form id="login-form" class="space-y-4">
+                <label class="block text-sm font-bold text-purple-950">Username
+                    <input name="username" required autocomplete="username" class="mt-2 w-full rounded-xl border border-pink-200 px-4 py-3 outline-none focus:ring-2 focus:ring-purple-500">
+                </label>
+                <label class="block text-sm font-bold text-purple-950">Password
+                    <input name="password" type="password" required autocomplete="current-password" class="mt-2 w-full rounded-xl border border-pink-200 px-4 py-3 outline-none focus:ring-2 focus:ring-purple-500">
+                </label>
+                <p id="login-error" class="hidden text-sm text-rose-600"></p>
+                <button class="w-full rounded-xl bg-purple-800 px-4 py-3 text-sm font-bold uppercase tracking-wider text-white hover:bg-purple-900">Masuk</button>
+            </form>
+            <a href="/" class="block mt-6 text-center text-xs font-bold text-purple-700 hover:text-pink-600">Kembali ke halaman utama</a>
+        </section>
+
+        <section id="dashboard-panel" class="hidden w-full max-w-5xl self-start py-6 sm:py-10">
+            <header class="flex flex-col sm:flex-row justify-between gap-4 mb-8">
+                <div>
+                    <p class="text-pink-500 font-mono text-xs uppercase tracking-widest font-bold">// DASHBOARD ADMIN</p>
+                    <h1 class="text-3xl font-black uppercase text-purple-950 mt-2">Input Data Ranting</h1>
+                </div>
+                <button id="logout-button" class="self-start rounded-xl border border-pink-200 bg-white px-4 py-2 text-xs font-bold uppercase text-purple-800">Keluar</button>
+            </header>
+            <div class="grid gap-6 lg:grid-cols-3">
+                <form data-endpoint="siswa" class="admin-form bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm space-y-3">
+                    <h2 class="text-xl font-black uppercase text-purple-950 mb-4">Tambah Siswa</h2>
+                    <input name="nama" required placeholder="Nama lengkap" class="field">
+                    <input name="alamat" placeholder="Alamat / domisili" class="field">
+                    <input name="tempat_lahir" placeholder="Tempat lahir" class="field">
+                    <input name="tanggal_lahir" type="date" class="field">
+                    <select name="sabuk" class="field"><option value="Polos">Polos</option><option value="Jambon">Jambon</option><option value="Telor">Telor</option><option value="Hijau">Hijau</option><option value="Putih">Putih</option></select>
+                    <button class="submit-button">Simpan Siswa</button>
+                </form>
+                <form data-endpoint="pengurus" class="admin-form bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm space-y-3">
+                    <h2 class="text-xl font-black uppercase text-purple-950 mb-4">Tambah Pengurus</h2>
+                    <input name="jabatan" required placeholder="Jabatan" class="field">
+                    <input name="nama" required placeholder="Nama" class="field">
+                    <textarea name="keterangan" placeholder="Keterangan" class="field min-h-24"></textarea>
+                    <button class="submit-button">Simpan Pengurus</button>
+                </form>
+                <form data-endpoint="pelatih" class="admin-form bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm space-y-3">
+                    <h2 class="text-xl font-black uppercase text-purple-950 mb-4">Tambah Pelatih</h2>
+                    <input name="nama" required placeholder="Nama" class="field">
+                    <input name="tingkatan" placeholder="Tingkatan" class="field">
+                    <input name="spesialisasi" placeholder="Spesialisasi / fokus" class="field">
+                    <input name="kontak" placeholder="Kontak / WhatsApp" class="field">
+                    <input name="status" value="Aktif" placeholder="Status" class="field">
+                    <button class="submit-button">Simpan Pelatih</button>
+                </form>
+            </div>
+            <p id="form-message" class="mt-6 text-sm font-bold"></p>
+        </section>
+    </main>
+    <style>
+        .field { width: 100%; border: 1px solid #fbcfe8; border-radius: .75rem; padding: .7rem 1rem; outline: none; }
+        .field:focus { box-shadow: 0 0 0 2px #7e22ce; }
+        .submit-button { width: 100%; border-radius: .75rem; background: #6b21a8; color: white; padding: .75rem 1rem; font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+    </style>
+    <script>
+        const loginPanel = document.getElementById('login-panel');
+        const dashboardPanel = document.getElementById('dashboard-panel');
+        const formMessage = document.getElementById('form-message');
+
+        document.getElementById('login-form').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const body = Object.fromEntries(new FormData(event.target));
+            const response = await fetch('/api/admin/login', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
+            if (!response.ok) {
+                const error = document.getElementById('login-error');
+                error.textContent = 'Username atau password salah.';
+                error.classList.remove('hidden');
+                return;
+            }
+            loginPanel.classList.add('hidden');
+            dashboardPanel.classList.remove('hidden');
+        });
+
+        document.querySelectorAll('.admin-form').forEach((form) => form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const body = Object.fromEntries(new FormData(form));
+            const response = await fetch('/api/admin/' + form.dataset.endpoint, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
+            formMessage.textContent = response.ok ? 'Data berhasil disimpan.' : 'Data gagal disimpan.';
+            formMessage.className = response.ok ? 'mt-6 text-sm font-bold text-green-700' : 'mt-6 text-sm font-bold text-rose-600';
+            if (response.ok) form.reset();
+        }));
+
+        document.getElementById('logout-button').addEventListener('click', async () => {
+            await fetch('/api/admin/logout', {method: 'POST'});
+            window.location.reload();
+        });
+
+        fetch('/api/admin/session').then((response) => {
+            if (response.ok) {
+                loginPanel.classList.add('hidden');
+                dashboardPanel.classList.remove('hidden');
+            }
+        });
+
+    </script>
+</body>
+</html>
