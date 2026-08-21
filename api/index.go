@@ -23,6 +23,7 @@ type Siswa struct {
 	TempatLahir  string `json:"tempat_lahir"`
 	TanggalLahir string `json:"tanggal_lahir"`
 	Sabuk        string `json:"sabuk"`
+	FotoURL      string `json:"foto_url"`
 }
 
 // Struktur data Absensi
@@ -126,7 +127,9 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	case "/api/siswa":
 		getSiswa(w, r)
 	case "/api/absensi":
-		if requireAdmin(w, r) && r.Method == http.MethodPost {
+		if r.Method == http.MethodGet {
+			getAbsensiBulan(w, r)
+		} else if requireAdmin(w, r) && r.Method == http.MethodPost {
 			simpanAbsensi(w, r)
 		} else {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -195,7 +198,7 @@ func validAdminToken(token string) bool {
 
 func createSiswa(w http.ResponseWriter, r *http.Request) {
 	var s Siswa
-	if json.NewDecoder(r.Body).Decode(&s) != nil || s.Nama == "" {
+	if json.NewDecoder(r.Body).Decode(&s) != nil || s.Nama == "" || s.Alamat == "" || s.TempatLahir == "" || s.TanggalLahir == "" || s.Sabuk == "" {
 		http.Error(w, `{"error":"Data siswa tidak valid"}`, http.StatusBadRequest)
 		return
 	}
@@ -205,7 +208,7 @@ func createSiswa(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer db.Close()
-	_, err = db.Exec("INSERT INTO siswa (nama, alamat, tempat_lahir, tanggal_lahir, sabuk) VALUES ($1, $2, $3, $4, $5)", s.Nama, s.Alamat, s.TempatLahir, s.TanggalLahir, s.Sabuk)
+	_, err = db.Exec("INSERT INTO siswa (nama, alamat, tempat_lahir, tanggal_lahir, sabuk, foto_url) VALUES ($1, $2, $3, $4, $5, $6)", s.Nama, s.Alamat, s.TempatLahir, s.TanggalLahir, s.Sabuk, s.FotoURL)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -235,7 +238,7 @@ func createPengurus(w http.ResponseWriter, r *http.Request) {
 
 func createPelatih(w http.ResponseWriter, r *http.Request) {
 	var p Pelatih
-	if json.NewDecoder(r.Body).Decode(&p) != nil || p.Nama == "" {
+	if json.NewDecoder(r.Body).Decode(&p) != nil || p.Nama == "" || p.Tingkatan == "" || p.Spesialisasi == "" || p.Kontak == "" {
 		http.Error(w, `{"error":"Data pelatih tidak valid"}`, http.StatusBadRequest)
 		return
 	}
@@ -353,7 +356,7 @@ func getSiswa(w http.ResponseWriter, r *http.Request) {
 	}
 	defer db.Close()
 
-	rows, err := db.Query("SELECT id, nama, alamat, tempat_lahir, tanggal_lahir, sabuk FROM siswa")
+	rows, err := db.Query("SELECT id, nama, alamat, tempat_lahir, tanggal_lahir, sabuk, foto_url FROM siswa")
 	if err != nil {
 		http.Error(w, `{"error": "`+err.Error()+`"}`, http.StatusInternalServerError)
 		return
@@ -363,7 +366,7 @@ func getSiswa(w http.ResponseWriter, r *http.Request) {
 	var listSiswa []Siswa
 	for rows.Next() {
 		var s Siswa
-		if err := rows.Scan(&s.ID, &s.Nama, &s.Alamat, &s.TempatLahir, &s.TanggalLahir, &s.Sabuk); err != nil {
+		if err := rows.Scan(&s.ID, &s.Nama, &s.Alamat, &s.TempatLahir, &s.TanggalLahir, &s.Sabuk, &s.FotoURL); err != nil {
 			continue
 		}
 		listSiswa = append(listSiswa, s)
@@ -383,7 +386,7 @@ func simpanAbsensi(w http.ResponseWriter, r *http.Request) {
 
 	var abs Absensi
 	err = json.NewDecoder(r.Body).Decode(&abs)
-	if err != nil {
+	if err != nil || abs.SiswaID == "" || abs.Tanggal == "" || (abs.Status != "hadir" && abs.Status != "izin" && abs.Status != "alpha") {
 		http.Error(w, `{"error": "Format data tidak valid"}`, http.StatusBadRequest)
 		return
 	}
@@ -397,6 +400,45 @@ func simpanAbsensi(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"status": "sukses", "message": "Absensi berhasil disimpan"})
+}
+
+func getAbsensiBulan(w http.ResponseWriter, r *http.Request) {
+	bulan := r.URL.Query().Get("bulan")
+	start, err := time.Parse("2006-01", bulan)
+	if err != nil {
+		http.Error(w, `{"error":"Format bulan harus YYYY-MM"}`, http.StatusBadRequest)
+		return
+	}
+	end := start.AddDate(0, 1, 0)
+	db, err := connectDB()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+
+	rows, err := db.Query(`SELECT tanggal, CASE
+		WHEN BOOL_OR(status = 'hadir') THEN 'hadir'
+		WHEN BOOL_OR(status = 'izin') THEN 'izin'
+		ELSE 'alpha' END AS status
+		FROM absensi WHERE tanggal >= $1 AND tanggal < $2 GROUP BY tanggal ORDER BY tanggal`, start, end)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	results := make([]map[string]string, 0)
+	for rows.Next() {
+		var tanggal time.Time
+		var status string
+		if err := rows.Scan(&tanggal, &status); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		results = append(results, map[string]string{"tanggal": tanggal.Format("2006-01-02"), "status": status})
+	}
+	json.NewEncoder(w).Encode(results)
 }
 
 // 3. Endpoint GET: Mengambil data pengurus ranting

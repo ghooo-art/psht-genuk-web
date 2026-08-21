@@ -39,10 +39,11 @@
                 <form data-endpoint="siswa" class="admin-form bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm space-y-3">
                     <h2 class="text-xl font-black uppercase text-purple-950 mb-4">Tambah Siswa</h2>
                     <input name="nama" required placeholder="Nama lengkap" class="field">
-                    <input name="alamat" placeholder="Alamat / domisili" class="field">
-                    <input name="tempat_lahir" placeholder="Tempat lahir" class="field">
-                    <input name="tanggal_lahir" type="date" class="field">
-                    <select name="sabuk" class="field"><option value="Polos">Polos</option><option value="Jambon">Jambon</option><option value="Telor">Telor</option><option value="Hijau">Hijau</option><option value="Putih">Putih</option></select>
+                    <input name="alamat" required placeholder="Alamat / domisili" class="field">
+                    <input name="tempat_lahir" required placeholder="Tempat lahir" class="field">
+                    <input name="tanggal_lahir" type="date" required class="field">
+                    <select name="sabuk" required class="field"><option value="">Pilih sabuk</option><option value="Polos">Polos</option><option value="Jambon">Jambon</option><option value="Telor">Telor</option><option value="Hijau">Hijau</option><option value="Putih">Putih</option></select>
+                    <input name="foto_url" type="url" placeholder="URL foto (opsional)" class="field">
                     <button class="submit-button">Simpan Siswa</button>
                 </form>
                 <form data-endpoint="pengurus" class="admin-form bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm space-y-3">
@@ -55,9 +56,9 @@
                 <form data-endpoint="pelatih" class="admin-form bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm space-y-3">
                     <h2 class="text-xl font-black uppercase text-purple-950 mb-4">Tambah Pelatih</h2>
                     <input name="nama" required placeholder="Nama" class="field">
-                    <input name="tingkatan" placeholder="Tingkatan" class="field">
-                    <input name="spesialisasi" placeholder="Spesialisasi / fokus" class="field">
-                    <input name="kontak" placeholder="Kontak / WhatsApp" class="field">
+                    <input name="tingkatan" required placeholder="Tingkatan" class="field">
+                    <input name="spesialisasi" required placeholder="Spesialisasi / fokus" class="field">
+                    <input name="kontak" required placeholder="Kontak / WhatsApp" class="field">
                     <input name="status" value="Aktif" placeholder="Status" class="field">
                     <button class="submit-button">Simpan Pelatih</button>
                 </form>
