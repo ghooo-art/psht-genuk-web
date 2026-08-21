@@ -113,13 +113,32 @@
 
     <!-- SCRIPT RENDER DINAMIS DARI DATABASE -->
     <script>
-        function toggleRow(rowId, iconId) {
+        async function toggleRow(rowId, iconId) {
             const row = document.getElementById(rowId);
             const icon = document.getElementById(iconId);
 
             if (row.classList.contains('hidden')) {
                 row.classList.remove('hidden');
                 icon.classList.add('rotate-180');
+                const panel = row.querySelector('.rekap-panel');
+                if (panel && !panel.dataset.loaded) {
+                    panel.innerHTML = '<p class="text-xs text-slate-400">Memuat rekap siswa...</p>';
+                    const siswaId = encodeURIComponent(row.dataset.siswaId);
+                    const [ujianResponse, penilaianResponse] = await Promise.all([
+                        fetch('/api/ujian?siswa_id=' + siswaId),
+                        fetch('/api/penilaian?siswa_id=' + siswaId)
+                    ]);
+                    if (!ujianResponse.ok || !penilaianResponse.ok) {
+                        panel.innerHTML = '<p class="text-xs text-rose-600">Gagal memuat rekap siswa.</p>';
+                        return;
+                    }
+                    const ujian = await ujianResponse.json();
+                    const penilaian = await penilaianResponse.json();
+                    panel.dataset.loaded = 'true';
+                    panel.innerHTML = `
+                        <div class="mb-5"><h6 class="font-bold text-purple-950 text-xs uppercase mb-2">Rekap Ujian</h6>${ujian.length ? ujian.map((item) => `<div class="flex flex-col sm:flex-row justify-between gap-2 border-b border-pink-100 py-2 text-xs"><span>${item.periode}</span><span class="font-bold">${item.nilai} - ${item.status}</span></div>`).join('') : '<p class="text-xs text-slate-500">Belum ada data ujian.</p>'}</div>
+                        <div><h6 class="font-bold text-purple-950 text-xs uppercase mb-2">Penilaian Latihan</h6>${penilaian.length ? penilaian.map((item) => `<div class="flex flex-col sm:flex-row justify-between gap-2 border-b border-pink-100 py-2 text-xs"><span>${item.periode_bulan} - ${item.materi}</span><span class="font-bold">${item.nilai_angka} - ${item.predikat}</span></div>`).join('') : '<p class="text-xs text-slate-500">Belum ada data penilaian.</p>'}</div>`;
+                }
             } else {
                 row.classList.add('hidden');
                 icon.classList.remove('rotate-180');
@@ -175,6 +194,7 @@
                         // Template baris dropdown detail rekap bulanan
                         let trDetail = document.createElement('tr');
                         trDetail.id = rowId;
+                        trDetail.dataset.siswaId = siswa.id;
                         trDetail.className = "detail-row hidden bg-purple-50/30 border-b border-pink-100";
                         trDetail.innerHTML = `
                             <td colspan="5" class="p-6 md:px-8">
@@ -183,8 +203,8 @@
                                         <h5 class="font-bold text-purple-950 text-xs uppercase tracking-wider">// Riwayat Uji Kompetensi Bulanan - ${siswa.nama}</h5>
                                         <span class="text-[10px] text-pink-600 font-bold bg-pink-100/70 px-2.5 py-0.5 rounded-md">Rutin 1 Bulan Sekali</span>
                                     </div>
-                                    <div class="bg-white rounded-2xl border border-pink-200 overflow-hidden shadow-2xs p-4 text-center text-xs text-slate-500">
-                                         Belum ada riwayat rekap nilai uji kompetensi untuk siswa ini.
+                                    <div class="rekap-panel bg-white rounded-2xl border border-pink-200 overflow-hidden shadow-2xs p-4">
+                                         <p class="text-xs text-slate-400">Buka untuk memuat rekap siswa.</p>
                                     </div>
                                 </div>
                             </td>

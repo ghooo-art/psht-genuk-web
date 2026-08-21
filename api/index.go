@@ -32,6 +32,24 @@ type Absensi struct {
 	Status  string `json:"status"` // 'hadir', 'izin', 'alpha'
 }
 
+type Penilaian struct {
+	ID           string `json:"id"`
+	SiswaID      string `json:"siswa_id"`
+	PeriodeBulan string `json:"periode_bulan"`
+	Materi       string `json:"materi"`
+	NilaiAngka   int    `json:"nilai_angka"`
+	Predikat     string `json:"predikat"`
+}
+
+type Ujian struct {
+	ID      int64   `json:"id"`
+	SiswaID string  `json:"siswa_id"`
+	Periode string  `json:"periode"`
+	Nilai   float64 `json:"nilai"`
+	Status  string  `json:"status"`
+	Catatan string  `json:"catatan"`
+}
+
 // Struktur data Pengurus Ranting
 type Pengurus struct {
 	ID         int    `json:"id"`
@@ -93,6 +111,18 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		if requireAdmin(w, r) && r.Method == http.MethodPost {
 			createPelatih(w, r)
 		}
+	case "/api/admin/absensi":
+		if requireAdmin(w, r) && r.Method == http.MethodPost {
+			simpanAbsensi(w, r)
+		}
+	case "/api/admin/penilaian":
+		if requireAdmin(w, r) && r.Method == http.MethodPost {
+			createPenilaian(w, r)
+		}
+	case "/api/admin/ujian":
+		if requireAdmin(w, r) && r.Method == http.MethodPost {
+			createUjian(w, r)
+		}
 	case "/api/siswa":
 		getSiswa(w, r)
 	case "/api/absensi":
@@ -105,6 +135,10 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		getPengurus(w, r)
 	case "/api/pelatih":
 		getPelatih(w, r)
+	case "/api/penilaian":
+		getPenilaian(w, r)
+	case "/api/ujian":
+		getUjian(w, r)
 	default:
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"message": "Backend Go PSHT Ranting Genuk Berjalan Normal!"}`))
@@ -217,6 +251,97 @@ func createPelatih(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	json.NewEncoder(w).Encode(map[string]string{"status": "sukses"})
+}
+
+func createPenilaian(w http.ResponseWriter, r *http.Request) {
+	var p Penilaian
+	if json.NewDecoder(r.Body).Decode(&p) != nil || p.SiswaID == "" || p.PeriodeBulan == "" || p.Materi == "" || p.NilaiAngka < 0 || p.NilaiAngka > 100 || p.Predikat == "" {
+		http.Error(w, `{"error":"Data penilaian tidak valid"}`, http.StatusBadRequest)
+		return
+	}
+	db, err := connectDB()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+	_, err = db.Exec("INSERT INTO penilaian (siswa_id, periode_bulan, materi, nilai_angka, predikat) VALUES ($1, $2, $3, $4, $5)", p.SiswaID, p.PeriodeBulan, p.Materi, p.NilaiAngka, p.Predikat)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	json.NewEncoder(w).Encode(map[string]string{"status": "sukses"})
+}
+
+func createUjian(w http.ResponseWriter, r *http.Request) {
+	var u Ujian
+	if json.NewDecoder(r.Body).Decode(&u) != nil || u.SiswaID == "" || u.Periode == "" || u.Nilai < 0 || u.Nilai > 100 || u.Status == "" {
+		http.Error(w, `{"error":"Data ujian tidak valid"}`, http.StatusBadRequest)
+		return
+	}
+	db, err := connectDB()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+	_, err = db.Exec("INSERT INTO ujian (siswa_id, periode, nilai, status, catatan) VALUES ($1, $2, $3, $4, $5)", u.SiswaID, u.Periode, u.Nilai, u.Status, u.Catatan)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	json.NewEncoder(w).Encode(map[string]string{"status": "sukses"})
+}
+
+func getPenilaian(w http.ResponseWriter, r *http.Request) {
+	getRekapRows(w, r, "penilaian", `SELECT id, siswa_id, periode_bulan, materi, nilai_angka, predikat FROM penilaian WHERE siswa_id = $1 ORDER BY created_at DESC`)
+}
+
+func getUjian(w http.ResponseWriter, r *http.Request) {
+	getRekapRows(w, r, "ujian", `SELECT id, siswa_id, periode, nilai, status, COALESCE(catatan, '') FROM ujian WHERE siswa_id = $1 ORDER BY periode DESC, created_at DESC`)
+}
+
+func getRekapRows(w http.ResponseWriter, r *http.Request, table string, query string) {
+	siswaID := r.URL.Query().Get("siswa_id")
+	if siswaID == "" {
+		http.Error(w, `{"error":"siswa_id wajib diisi"}`, http.StatusBadRequest)
+		return
+	}
+	db, err := connectDB()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+	rows, err := db.Query(query, siswaID)
+	if err != nil {
+		http.Error(w, "Gagal mengambil rekap "+table, http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+	if table == "penilaian" {
+		results := make([]Penilaian, 0)
+		for rows.Next() {
+			var p Penilaian
+			if err := rows.Scan(&p.ID, &p.SiswaID, &p.PeriodeBulan, &p.Materi, &p.NilaiAngka, &p.Predikat); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			results = append(results, p)
+		}
+		json.NewEncoder(w).Encode(results)
+		return
+	}
+	results := make([]Ujian, 0)
+	for rows.Next() {
+		var u Ujian
+		if err := rows.Scan(&u.ID, &u.SiswaID, &u.Periode, &u.Nilai, &u.Status, &u.Catatan); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		results = append(results, u)
+	}
+	json.NewEncoder(w).Encode(results)
 }
 
 // 1. Endpoint GET: Mengambil seluruh data siswa dari Supabase

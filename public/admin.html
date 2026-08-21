@@ -61,6 +61,31 @@
                     <input name="status" value="Aktif" placeholder="Status" class="field">
                     <button class="submit-button">Simpan Pelatih</button>
                 </form>
+                <form data-endpoint="absensi" class="admin-form bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm space-y-3">
+                    <h2 class="text-xl font-black uppercase text-purple-950 mb-4">Input Absensi</h2>
+                    <select id="siswa-absensi" name="siswa_id" required class="field"><option value="">Pilih siswa</option></select>
+                    <input name="tanggal" type="date" required class="field">
+                    <select name="status" required class="field"><option value="hadir">Hadir</option><option value="izin">Izin</option><option value="alpha">Alpha</option></select>
+                    <button class="submit-button">Simpan Absensi</button>
+                </form>
+                <form data-endpoint="penilaian" class="admin-form bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm space-y-3">
+                    <h2 class="text-xl font-black uppercase text-purple-950 mb-4">Input Penilaian</h2>
+                    <select id="siswa-penilaian" name="siswa_id" required class="field"><option value="">Pilih siswa</option></select>
+                    <input name="periode_bulan" required placeholder="Periode, contoh: Juni 2026" class="field">
+                    <input name="materi" required placeholder="Materi penilaian" class="field">
+                    <input name="nilai_angka" type="number" min="0" max="100" required placeholder="Nilai angka (0-100)" class="field">
+                    <input name="predikat" required placeholder="Predikat, contoh: Baik" class="field">
+                    <button class="submit-button">Simpan Penilaian</button>
+                </form>
+                <form data-endpoint="ujian" class="admin-form bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm space-y-3">
+                    <h2 class="text-xl font-black uppercase text-purple-950 mb-4">Input Ujian</h2>
+                    <select id="siswa-ujian" name="siswa_id" required class="field"><option value="">Pilih siswa</option></select>
+                    <input name="periode" type="date" required class="field">
+                    <input name="nilai" type="number" min="0" max="100" step="0.01" required placeholder="Nilai (0-100)" class="field">
+                    <select name="status" required class="field"><option value="Lulus">Lulus</option><option value="Belum Lulus">Belum Lulus</option></select>
+                    <textarea name="catatan" placeholder="Catatan ujian" class="field min-h-24"></textarea>
+                    <button class="submit-button">Simpan Ujian</button>
+                </form>
             </div>
             <p id="form-message" class="mt-6 text-sm font-bold"></p>
         </section>
@@ -87,6 +112,7 @@
             }
             loginPanel.classList.add('hidden');
             dashboardPanel.classList.remove('hidden');
+            loadStudentsIntoForms();
         });
 
         document.querySelectorAll('.admin-form').forEach((form) => form.addEventListener('submit', async (event) => {
@@ -107,8 +133,28 @@
             if (response.ok) {
                 loginPanel.classList.add('hidden');
                 dashboardPanel.classList.remove('hidden');
+                loadStudentsIntoForms();
             }
         });
+
+        async function loadStudentsIntoForms() {
+            const response = await fetch('/api/siswa');
+            if (!response.ok) return;
+            const students = await response.json();
+            ['siswa-absensi', 'siswa-penilaian', 'siswa-ujian'].forEach((id) => {
+                const select = document.getElementById(id);
+                students.forEach((student) => {
+                    const option = document.createElement('option');
+                    option.value = student.id;
+                    option.textContent = student.nama + ' - ' + student.sabuk;
+                    select.appendChild(option);
+                });
+            });
+        }
+
+        const today = new Date().toISOString().slice(0, 10);
+        document.querySelector('[data-endpoint="absensi"] input[name="tanggal"]').value = today;
+        document.querySelector('[data-endpoint="ujian"] input[name="periode"]').value = today;
 
     </script>
 </body>
