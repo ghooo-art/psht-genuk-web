@@ -37,6 +37,15 @@ type Absensi struct {
 	Status  string `json:"status"` // 'hadir', 'izin', 'alpha'
 }
 
+type RekapAbsensi struct {
+	SiswaID string  `json:"siswa_id"`
+	Hadir   int     `json:"hadir"`
+	Izin    int     `json:"izin"`
+	Alpha   int     `json:"alpha"`
+	Persen  float64 `json:"persentase"`
+	Sesi    int     `json:"sesi"`
+}
+
 type Penilaian struct {
 	ID           string `json:"id"`
 	SiswaID      string `json:"siswa_id"`
@@ -73,6 +82,13 @@ type Pelatih struct {
 	Kontak       string `json:"kontak"`
 	Status       string `json:"status"`
 	FotoURL      string `json:"foto_url"`
+}
+
+type JadwalLatihan struct {
+	ID    int    `json:"id"`
+	Hari  string `json:"hari"`
+	Waktu string `json:"waktu"`
+	Aktif bool   `json:"aktif"`
 }
 
 type adminLogin struct {
@@ -134,6 +150,10 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		if requireAdmin(w, r) && r.Method == http.MethodPost {
 			uploadFoto(w, r)
 		}
+	case "/api/admin/jadwal":
+		if requireAdmin(w, r) && r.Method == http.MethodPost {
+			simpanJadwal(w, r)
+		}
 	case "/api/siswa":
 		getSiswa(w, r)
 	case "/api/absensi":
@@ -148,6 +168,8 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		getPengurus(w, r)
 	case "/api/pelatih":
 		getPelatih(w, r)
+	case "/api/jadwal":
+		getJadwal(w, r)
 	case "/api/penilaian":
 		getPenilaian(w, r)
 	case "/api/ujian":
@@ -414,6 +436,34 @@ func getRekapRows(w http.ResponseWriter, r *http.Request, table string, query st
 	json.NewEncoder(w).Encode(results)
 }
 
+func getRekapAbsensi(w http.ResponseWriter, db *sql.DB, start, end time.Time) {
+	rows, err := db.Query(`SELECT s.id,
+		COUNT(a.*) FILTER (WHERE a.status = 'hadir'),
+		COUNT(a.*) FILTER (WHERE a.status = 'izin'),
+		COUNT(a.*) FILTER (WHERE a.status = 'alpha'),
+		COUNT(DISTINCT a.tanggal)
+		FROM siswa s LEFT JOIN absensi a ON a.siswa_id = s.id AND a.tanggal >= $1 AND a.tanggal < $2
+		GROUP BY s.id ORDER BY s.nama`, start, end)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+	results := make([]RekapAbsensi, 0)
+	for rows.Next() {
+		var item RekapAbsensi
+		if err := rows.Scan(&item.SiswaID, &item.Hadir, &item.Izin, &item.Alpha, &item.Sesi); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		if item.Sesi > 0 {
+			item.Persen = float64(item.Hadir) / float64(item.Sesi) * 100
+		}
+		results = append(results, item)
+	}
+	json.NewEncoder(w).Encode(results)
+}
+
 // 1. Endpoint GET: Mengambil seluruh data siswa dari Supabase
 func getSiswa(w http.ResponseWriter, r *http.Request) {
 	db, err := connectDB()
@@ -483,6 +533,10 @@ func getAbsensiBulan(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer db.Close()
+	if r.URL.Query().Get("rekap") == "true" {
+		getRekapAbsensi(w, db, start, end)
+		return
+	}
 
 	rows, err := db.Query(`SELECT tanggal, CASE
 		WHEN BOOL_OR(status = 'hadir') THEN 'hadir'
@@ -562,6 +616,106 @@ func getPelatih(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(listPelatih)
+}
+
+func ensureJadwalTable(db *sql.DB) error {
+	_, err := db.Exec(`CREATE TABLE IF NOT EXISTS jadwal_latihan (
+		id SERIAL PRIMARY KEY,
+		hari TEXT NOT NULL,
+		waktu TEXT NOT NULL,
+		aktif BOOLEAN NOT NULL DEFAULT TRUE
+	)`)
+	return err
+}
+
+func getJadwal(w http.ResponseWriter, r *http.Request) {
+	db, err := connectDB()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+	if err := ensureJadwalTable(db); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var count int
+	if err := db.QueryRow("SELECT COUNT(*) FROM jadwal_latihan WHERE aktif = TRUE").Scan(&count); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if count == 0 {
+		_, err = db.Exec("INSERT INTO jadwal_latihan (hari, waktu) VALUES ($1, $2), ($3, $4)", "Selasa", "19:22", "Sabtu", "19:22")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+	rows, err := db.Query("SELECT id, hari, waktu, aktif FROM jadwal_latihan WHERE aktif = TRUE ORDER BY id")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+	jadwal := make([]JadwalLatihan, 0)
+	for rows.Next() {
+		var item JadwalLatihan
+		if err := rows.Scan(&item.ID, &item.Hari, &item.Waktu, &item.Aktif); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		jadwal = append(jadwal, item)
+	}
+	json.NewEncoder(w).Encode(jadwal)
+}
+
+func simpanJadwal(w http.ResponseWriter, r *http.Request) {
+	var jadwal []JadwalLatihan
+	if json.NewDecoder(r.Body).Decode(&jadwal) != nil || len(jadwal) == 0 || len(jadwal) > 7 {
+		http.Error(w, `{"error":"Minimal satu jadwal dan maksimal tujuh jadwal"}`, http.StatusBadRequest)
+		return
+	}
+	for _, item := range jadwal {
+		if strings.TrimSpace(item.Hari) == "" || strings.TrimSpace(item.Waktu) == "" {
+			http.Error(w, `{"error":"Hari dan waktu wajib diisi"}`, http.StatusBadRequest)
+			return
+		}
+	}
+
+	db, err := connectDB()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+	if err := ensureJadwalTable(db); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	tx, err := db.Begin()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if _, err = tx.Exec("DELETE FROM jadwal_latihan"); err != nil {
+		tx.Rollback()
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	for _, item := range jadwal {
+		if _, err = tx.Exec("INSERT INTO jadwal_latihan (hari, waktu, aktif) VALUES ($1, $2, TRUE)", strings.TrimSpace(item.Hari), strings.TrimSpace(item.Waktu)); err != nil {
+			tx.Rollback()
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+	if err = tx.Commit(); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	json.NewEncoder(w).Encode(map[string]string{"status": "sukses"})
 }
 
 // Fungsi bantu koneksi ke database Supabase

@@ -64,6 +64,14 @@
                     <input name="foto" type="file" accept="image/jpeg,image/png,image/webp" class="field">
                     <button class="submit-button">Simpan Pelatih</button>
                 </form>
+                <form id="jadwal-form" class="bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm space-y-3">
+                    <div class="flex items-center justify-between gap-3">
+                        <h2 class="text-xl font-black uppercase text-purple-950">Jadwal Latihan</h2>
+                        <button type="button" id="tambah-jadwal" class="text-xs font-bold text-purple-700">+ Tambah</button>
+                    </div>
+                    <div id="jadwal-list" class="space-y-3"></div>
+                    <button class="submit-button">Simpan Jadwal</button>
+                </form>
                 <form data-endpoint="absensi" class="admin-form bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm space-y-3">
                     <h2 class="text-xl font-black uppercase text-purple-950 mb-4">Input Absensi</h2>
                     <select id="siswa-absensi" name="siswa_id" required class="field"><option value="">Pilih siswa</option></select>
@@ -116,6 +124,7 @@
             loginPanel.classList.add('hidden');
             dashboardPanel.classList.remove('hidden');
             loadStudentsIntoForms();
+            loadJadwal();
         });
 
         document.querySelectorAll('.admin-form').forEach((form) => form.addEventListener('submit', async (event) => {
@@ -142,6 +151,23 @@
             if (response.ok) form.reset();
         }));
 
+        document.getElementById('jadwal-form').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const items = [...document.querySelectorAll('#jadwal-list .jadwal-item')].map((item) => ({
+                hari: item.querySelector('[name="hari"]').value,
+                waktu: item.querySelector('[name="waktu"]').value
+            }));
+            const response = await fetch('/api/admin/jadwal', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(items)
+            });
+            formMessage.textContent = response.ok ? 'Jadwal berhasil disimpan.' : 'Jadwal gagal disimpan.';
+            formMessage.className = response.ok ? 'mt-6 text-sm font-bold text-green-700' : 'mt-6 text-sm font-bold text-rose-600';
+        });
+
+        document.getElementById('tambah-jadwal').addEventListener('click', () => tambahJadwalInput());
+
         document.getElementById('logout-button').addEventListener('click', async () => {
             await fetch('/api/admin/logout', {method: 'POST'});
             window.location.reload();
@@ -152,6 +178,7 @@
                 loginPanel.classList.add('hidden');
                 dashboardPanel.classList.remove('hidden');
                 loadStudentsIntoForms();
+                loadJadwal();
             }
         });
 
@@ -170,9 +197,36 @@
             });
         }
 
+        function tambahJadwalInput(jadwal = {hari: '', waktu: ''}) {
+            const item = document.createElement('div');
+            item.className = 'jadwal-item flex gap-2';
+            item.innerHTML = `
+                <input name="hari" required placeholder="Hari" value="${escapeHTML(jadwal.hari)}" class="field">
+                <input name="waktu" required type="time" value="${escapeHTML(jadwal.waktu)}" class="field">
+                <button type="button" aria-label="Hapus jadwal" class="hapus-jadwal px-2 text-rose-600 font-bold">×</button>
+            `;
+            item.querySelector('.hapus-jadwal').addEventListener('click', () => item.remove());
+            document.getElementById('jadwal-list').appendChild(item);
+        }
+
+        async function loadJadwal() {
+            const response = await fetch('/api/jadwal');
+            if (!response.ok) return;
+            const jadwal = await response.json();
+            document.getElementById('jadwal-list').innerHTML = '';
+            jadwal.forEach((item) => tambahJadwalInput(item));
+        }
+
+        function escapeHTML(value) {
+            return String(value ?? '').replace(/[&<>'"]/g, (character) => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+            }[character]));
+        }
+
         const today = new Date().toISOString().slice(0, 10);
         document.querySelector('[data-endpoint="absensi"] input[name="tanggal"]').value = today;
         document.querySelector('[data-endpoint="ujian"] input[name="periode"]').value = today;
+        loadJadwal();
 
     </script>
 </body>

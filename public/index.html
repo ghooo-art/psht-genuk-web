@@ -121,15 +121,8 @@
                     <p class="text-slate-500 text-sm font-medium">Lihat jadwal latihan dan datang untuk berlatih bersama.</p>
                 </div>
 
-                <div class="relative z-10 w-full md:w-2/3 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div class="bg-purple-50/50 p-4 rounded-xl border border-purple-100 flex items-center justify-between">
-                        <span class="text-purple-900 text-sm font-bold">Selasa Malam</span>
-                        <span class="text-pink-600 font-mono text-sm font-bold">19:22 WIB</span>
-                    </div>
-                    <div class="bg-purple-50/50 p-4 rounded-xl border border-purple-100 flex items-center justify-between">
-                        <span class="text-purple-900 text-sm font-bold">Sabtu Malam</span>
-                        <span class="text-pink-600 font-mono text-sm font-bold">19:22 WIB</span>
-                    </div>
+                <div id="jadwal-latihan" class="relative z-10 w-full md:w-2/3 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <p class="text-slate-500 text-sm">Sedang memuat jadwal latihan...</p>
                 </div>
             </div>
         </section>
@@ -188,6 +181,7 @@
         document.addEventListener("DOMContentLoaded", function() {
             loadPengurus();
             loadPelatih();
+            loadJadwal();
         });
 
         async function loadPengurus() {
@@ -202,10 +196,10 @@
                         let div = document.createElement('div');
                         div.className = "bg-white p-8 rounded-3xl border border-pink-200 shadow-sm text-center flex flex-col items-center hover:border-purple-300 transition-all";
                         div.innerHTML = `
-                            <div class="w-14 h-14 rounded-2xl bg-purple-100 text-purple-800 font-bold flex items-center justify-center text-xl mb-4 border border-purple-200">👤</div>
-                            <span class="text-[10px] font-mono font-bold uppercase text-pink-600 tracking-wider mb-1">${p.jabatan}</span>
-                            <h4 class="text-xl font-black text-purple-950 mb-1">${p.nama}</h4>
-                            <p class="text-slate-600 text-xs font-medium mt-2">${p.keterangan || ''}</p>
+                            ${p.foto_url ? `<img src="${safeImageURL(p.foto_url)}" alt="Foto ${escapeHTML(p.nama)}" class="w-14 h-14 rounded-2xl object-cover mb-4 border border-purple-200">` : '<div class="w-14 h-14 rounded-2xl bg-purple-100 text-purple-800 font-bold flex items-center justify-center text-xl mb-4 border border-purple-200">👤</div>'}
+                            <span class="text-[10px] font-mono font-bold uppercase text-pink-600 tracking-wider mb-1">${escapeHTML(p.jabatan)}</span>
+                            <h4 class="text-xl font-black text-purple-950 mb-1">${escapeHTML(p.nama)}</h4>
+                            <p class="text-slate-600 text-xs font-medium mt-2">${escapeHTML(p.keterangan || '')}</p>
                         `;
                         container.appendChild(div);
                     });
@@ -231,12 +225,15 @@
                         tr.className = "hover:bg-pink-50/30";
                         tr.innerHTML = `
                                 <td data-label="Nama Pelatih" class="p-4">
-                                <p class="font-bold text-purple-950">${l.nama}</p>
-                                <span class="text-xs text-slate-500 font-medium">${l.tingkatan}</span>
+                                <div class="flex items-center gap-3">
+                                    ${l.foto_url ? `<img src="${safeImageURL(l.foto_url)}" alt="Foto ${escapeHTML(l.nama)}" class="w-10 h-10 rounded-full object-cover border border-pink-200">` : '<div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 text-xs font-bold border border-pink-200">👤</div>'}
+                                    <div><p class="font-bold text-purple-950">${escapeHTML(l.nama)}</p>
+                                    <span class="text-xs text-slate-500 font-medium">${escapeHTML(l.tingkatan)}</span></div>
+                                </div>
                             </td>
-                                <td data-label="Spesialisasi" class="p-4 text-slate-600 text-xs font-medium">${l.spesialisasi}</td>
-                                <td data-label="Kontak" class="p-4 text-slate-600 text-xs font-mono">${l.kontak}</td>
-                                <td data-label="Status" class="p-4 text-center"><span class="bg-green-50 text-green-700 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider">${l.status}</span></td>
+                                <td data-label="Spesialisasi" class="p-4 text-slate-600 text-xs font-medium">${escapeHTML(l.spesialisasi)}</td>
+                                <td data-label="Kontak" class="p-4 text-slate-600 text-xs font-mono">${escapeHTML(l.kontak)}</td>
+                                <td data-label="Status" class="p-4 text-center"><span class="bg-green-50 text-green-700 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider">${escapeHTML(l.status)}</span></td>
                         `;
                         tbody.appendChild(tr);
                     });
@@ -247,6 +244,34 @@
                 console.error("Gagal memuat pelatih:", e);
                 tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-rose-500">Daftar pelatih belum bisa dimuat.</td></tr>`;
             }
+        }
+
+        async function loadJadwal() {
+            const container = document.getElementById('jadwal-latihan');
+            try {
+                const response = await fetch('/api/jadwal');
+                if (!response.ok) throw new Error('Jadwal gagal dimuat');
+                const jadwal = await response.json();
+                container.innerHTML = jadwal.map((item) => `
+                    <div class="bg-purple-50/50 p-4 rounded-xl border border-purple-100 flex items-center justify-between">
+                        <span class="text-purple-900 text-sm font-bold">${escapeHTML(item.hari)}</span>
+                        <span class="text-pink-600 font-mono text-sm font-bold">${escapeHTML(item.waktu)} WIB</span>
+                    </div>
+                `).join('');
+            } catch (error) {
+                container.innerHTML = '<p class="text-rose-500 text-sm">Jadwal latihan belum bisa dimuat.</p>';
+            }
+        }
+
+        function escapeHTML(value) {
+            return String(value ?? '').replace(/[&<>'"]/g, (character) => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+            }[character]));
+        }
+
+        function safeImageURL(value) {
+            const url = String(value || '');
+            return /^https?:\/\//i.test(url) ? escapeHTML(url) : '';
         }
 
         function toggleMobileMenu() {
