@@ -10,9 +10,9 @@
     <main class="min-h-screen flex items-center justify-center p-4 sm:p-6">
         <section id="login-panel" class="w-full max-w-md bg-white rounded-3xl border border-pink-200 shadow-xl p-6 sm:p-8">
             <div class="mb-8">
-                <p class="text-pink-500 font-mono text-xs uppercase tracking-widest font-bold">// AREA ADMIN</p>
+                <p class="text-pink-500 font-mono text-xs uppercase tracking-widest font-bold">Halaman Pengurus</p>
                 <h1 class="text-3xl font-black uppercase text-purple-950 mt-2">Masuk Admin</h1>
-                <p class="text-sm text-slate-500 mt-2">Kelola data PSHT Ranting Genuk.</p>
+                <p class="text-sm text-slate-500 mt-2">Kelola data siswa, pelatih, dan kegiatan latihan.</p>
             </div>
             <form id="login-form" class="space-y-4">
                 <label class="block text-sm font-bold text-purple-950">Username
@@ -30,36 +30,38 @@
         <section id="dashboard-panel" class="hidden w-full max-w-5xl self-start py-6 sm:py-10">
             <header class="flex flex-col sm:flex-row justify-between gap-4 mb-8">
                 <div>
-                    <p class="text-pink-500 font-mono text-xs uppercase tracking-widest font-bold">// DASHBOARD ADMIN</p>
-                    <h1 class="text-3xl font-black uppercase text-purple-950 mt-2">Input Data Ranting</h1>
+                    <p class="text-pink-500 font-mono text-xs uppercase tracking-widest font-bold">Halaman Pengurus</p>
+                    <h1 class="text-3xl font-black uppercase text-purple-950 mt-2">Kelola Data Ranting</h1>
                 </div>
                 <button id="logout-button" class="self-start rounded-xl border border-pink-200 bg-white px-4 py-2 text-xs font-bold uppercase text-purple-800">Keluar</button>
             </header>
             <div class="grid gap-6 lg:grid-cols-3">
-                <form data-endpoint="siswa" class="admin-form bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm space-y-3">
+                <form data-endpoint="siswa" data-category="siswa" class="admin-form bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm space-y-3">
                     <h2 class="text-xl font-black uppercase text-purple-950 mb-4">Tambah Siswa</h2>
                     <input name="nama" required placeholder="Nama lengkap" class="field">
                     <input name="alamat" required placeholder="Alamat / domisili" class="field">
                     <input name="tempat_lahir" required placeholder="Tempat lahir" class="field">
                     <input name="tanggal_lahir" type="date" required class="field">
                     <select name="sabuk" required class="field"><option value="">Pilih sabuk</option><option value="Polos">Polos</option><option value="Jambon">Jambon</option><option value="Telor">Telor</option><option value="Hijau">Hijau</option><option value="Putih">Putih</option></select>
-                    <input name="foto_url" type="url" placeholder="URL foto (opsional)" class="field">
+                    <input name="foto" type="file" accept="image/jpeg,image/png,image/webp" class="field">
                     <button class="submit-button">Simpan Siswa</button>
                 </form>
-                <form data-endpoint="pengurus" class="admin-form bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm space-y-3">
+                <form data-endpoint="pengurus" data-category="pengurus" class="admin-form bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm space-y-3">
                     <h2 class="text-xl font-black uppercase text-purple-950 mb-4">Tambah Pengurus</h2>
                     <input name="jabatan" required placeholder="Jabatan" class="field">
                     <input name="nama" required placeholder="Nama" class="field">
                     <textarea name="keterangan" placeholder="Keterangan" class="field min-h-24"></textarea>
+                    <input name="foto" type="file" accept="image/jpeg,image/png,image/webp" class="field">
                     <button class="submit-button">Simpan Pengurus</button>
                 </form>
-                <form data-endpoint="pelatih" class="admin-form bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm space-y-3">
+                <form data-endpoint="pelatih" data-category="pelatih" class="admin-form bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm space-y-3">
                     <h2 class="text-xl font-black uppercase text-purple-950 mb-4">Tambah Pelatih</h2>
                     <input name="nama" required placeholder="Nama" class="field">
                     <input name="tingkatan" required placeholder="Tingkatan" class="field">
                     <input name="spesialisasi" required placeholder="Spesialisasi / fokus" class="field">
                     <input name="kontak" required placeholder="Kontak / WhatsApp" class="field">
                     <input name="status" value="Aktif" placeholder="Status" class="field">
+                    <input name="foto" type="file" accept="image/jpeg,image/png,image/webp" class="field">
                     <button class="submit-button">Simpan Pelatih</button>
                 </form>
                 <form data-endpoint="absensi" class="admin-form bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm space-y-3">
@@ -119,6 +121,21 @@
         document.querySelectorAll('.admin-form').forEach((form) => form.addEventListener('submit', async (event) => {
             event.preventDefault();
             const body = Object.fromEntries(new FormData(form));
+            const foto = form.querySelector('input[type="file"]')?.files[0];
+            if (foto) {
+                const uploadData = new FormData();
+                uploadData.append('file', foto);
+                uploadData.append('category', form.dataset.category);
+                const uploadResponse = await fetch('/api/admin/upload', { method: 'POST', body: uploadData });
+                if (!uploadResponse.ok) {
+                    formMessage.textContent = 'Foto gagal diunggah.';
+                    formMessage.className = 'mt-6 text-sm font-bold text-rose-600';
+                    return;
+                }
+                const uploadResult = await uploadResponse.json();
+                body.foto_url = uploadResult.foto_url;
+            }
+            delete body.foto;
             const response = await fetch('/api/admin/' + form.dataset.endpoint, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
             formMessage.textContent = response.ok ? 'Data berhasil disimpan.' : 'Data gagal disimpan.';
             formMessage.className = response.ok ? 'mt-6 text-sm font-bold text-green-700' : 'mt-6 text-sm font-bold text-rose-600';

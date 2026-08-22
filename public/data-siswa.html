@@ -45,7 +45,7 @@
                 </div>
                 <div>
                     <h1 class="font-bold text-purple-950 text-base tracking-wider uppercase leading-none mb-1">PSHT Genuk</h1>
-                    <p class="text-[9px] text-pink-600 uppercase tracking-widest font-bold">Ranting Pendataan</p>
+                    <p class="text-[9px] text-pink-600 uppercase tracking-widest font-bold">Pendataan Ranting</p>
                 </div>
             </a>
 
@@ -71,8 +71,8 @@
         <!-- Header Halaman & Pencarian -->
         <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
             <div>
-                <span class="text-pink-500 font-mono text-xs uppercase tracking-widest block mb-2 font-bold">// DATABASE RANTING</span>
-                <h2 class="text-3xl font-black uppercase tracking-tight text-purple-950">Tabel Data Siswa & Rekap Ujian</h2>
+                <span class="text-pink-500 font-mono text-xs uppercase tracking-widest block mb-2 font-bold">Data Siswa</span>
+                <h2 class="text-3xl font-black uppercase tracking-tight text-purple-950">Data Siswa dan Hasil Ujian</h2>
             </div>
             
             <div class="w-full md:w-auto relative">
@@ -97,7 +97,7 @@
                     <tbody id="tabel-siswa-body" class="divide-y divide-pink-100 text-sm">
                         <!-- Data akan dimuat secara otomatis oleh JavaScript dari Database Supabase -->
                         <tr>
-                            <td colspan="5" class="p-8 text-center text-slate-400">Memuat data dari database...</td>
+                            <td colspan="5" class="p-8 text-center text-slate-400">Sedang menyiapkan data siswa...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -108,7 +108,7 @@
 
     <!-- FOOTER -->
     <footer class="border-t border-pink-200 py-8 mt-auto text-center text-xs text-slate-500 font-mono bg-[#FDF8FA]">
-        <p>PSHT RANTING GENUK © 2026 • TABEL DATA SISWA & UJI KOMPETENSI</p>
+        <p>PSHT RANTING GENUK © 2026 • Data latihan dan perkembangan siswa</p>
     </footer>
 
     <!-- SCRIPT RENDER DINAMIS DARI DATABASE -->
@@ -122,7 +122,7 @@
                 icon.classList.add('rotate-180');
                 const panel = row.querySelector('.rekap-panel');
                 if (panel && !panel.dataset.loaded) {
-                    panel.innerHTML = '<p class="text-xs text-slate-400">Memuat rekap siswa...</p>';
+                    panel.innerHTML = '<p class="text-xs text-slate-400">Sedang membuka rekap siswa...</p>';
                     const siswaId = encodeURIComponent(row.dataset.siswaId);
                     const [ujianResponse, penilaianResponse] = await Promise.all([
                         fetch('/api/ujian?siswa_id=' + siswaId),
@@ -200,8 +200,8 @@
                             <td colspan="5" class="p-6 md:px-8">
                                 <div class="space-y-3">
                                     <div class="flex items-center justify-between">
-                                        <h5 class="font-bold text-purple-950 text-xs uppercase tracking-wider">// Riwayat Uji Kompetensi Bulanan - ${siswa.nama}</h5>
-                                        <span class="text-[10px] text-pink-600 font-bold bg-pink-100/70 px-2.5 py-0.5 rounded-md">Rutin 1 Bulan Sekali</span>
+                                         <h5 class="font-bold text-purple-950 text-xs uppercase tracking-wider">Riwayat Ujian Bulanan - ${siswa.nama}</h5>
+                                         <span class="text-[10px] text-pink-600 font-bold bg-pink-100/70 px-2.5 py-0.5 rounded-md">Setiap bulan</span>
                                     </div>
                                     <div class="rekap-panel bg-white rounded-2xl border border-pink-200 overflow-hidden shadow-2xs p-4">
                                          <p class="text-xs text-slate-400">Buka untuk memuat rekap siswa.</p>
@@ -212,11 +212,11 @@
                         tbody.appendChild(trDetail);
                     });
                 } else {
-                    tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-400">Belum ada data siswa di dalam database.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-400">Belum ada siswa yang terdaftar.</td></tr>`;
                 }
             } catch (error) {
                 console.error("Gagal mengambil data siswa:", error);
-                tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-rose-500">Gagal terhubung ke server / database.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-rose-500">Data siswa belum bisa dimuat.</td></tr>`;
             }
         });
 
