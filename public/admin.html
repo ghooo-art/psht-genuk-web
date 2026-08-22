@@ -35,13 +35,14 @@
                         <p class="mt-2 text-sm text-purple-100">Pilih formulir yang ingin diisi.</p>
                     </div>
                     <nav class="flex gap-2 overflow-x-auto lg:block lg:space-y-1" aria-label="Navigasi data admin">
-                        <a href="#form-siswa" class="admin-nav-link">Siswa</a>
-                        <a href="#form-pengurus" class="admin-nav-link">Pengurus</a>
-                        <a href="#form-pelatih" class="admin-nav-link">Pelatih</a>
-                        <a href="#form-jadwal" class="admin-nav-link">Jadwal</a>
-                        <a href="#form-absensi" class="admin-nav-link">Absensi</a>
-                        <a href="#form-penilaian" class="admin-nav-link">Penilaian</a>
-                        <a href="#form-ujian" class="admin-nav-link">Ujian</a>
+                        <a href="#dashboard" data-page="dashboard" class="admin-nav-link">Dashboard</a>
+                        <a href="#siswa" data-page="siswa" class="admin-nav-link">Siswa</a>
+                        <a href="#pengurus" data-page="pengurus" class="admin-nav-link">Pengurus</a>
+                        <a href="#pelatih" data-page="pelatih" class="admin-nav-link">Pelatih</a>
+                        <a href="#jadwal" data-page="jadwal" class="admin-nav-link">Jadwal</a>
+                        <a href="#absensi" data-page="absensi" class="admin-nav-link">Absensi</a>
+                        <a href="#penilaian" data-page="penilaian" class="admin-nav-link">Penilaian</a>
+                        <a href="#ujian" data-page="ujian" class="admin-nav-link">Ujian</a>
                     </nav>
                     <div class="mt-5 border-t border-white/15 pt-4">
                         <a href="/" class="block text-xs font-bold text-pink-200 hover:text-white">Lihat halaman utama</a>
@@ -53,11 +54,38 @@
                     <header class="flex flex-col sm:flex-row justify-between gap-4 mb-8">
                         <div>
                             <p class="text-pink-500 font-mono text-xs uppercase tracking-widest font-bold">Halaman Pengurus</p>
-                            <h1 class="text-3xl font-black uppercase text-purple-950 mt-2">Kelola Data Ranting</h1>
+                            <h1 id="page-title" class="text-3xl font-black uppercase text-purple-950 mt-2">Dashboard Ranting</h1>
                         </div>
                     </header>
-                    <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-                <form id="form-siswa" data-endpoint="siswa" data-category="siswa" class="admin-form bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm space-y-3">
+                    <div id="page-dashboard" class="admin-page space-y-6" data-page="dashboard">
+                        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                            <div class="stat-card"><span>Siswa terdaftar</span><strong id="stat-siswa">-</strong></div>
+                            <div class="stat-card"><span>Pengurus</span><strong id="stat-pengurus">-</strong></div>
+                            <div class="stat-card"><span>Pelatih aktif</span><strong id="stat-pelatih">-</strong></div>
+                            <div class="stat-card"><span>Sesi bulan ini</span><strong id="stat-sesi">-</strong></div>
+                        </div>
+                        <div class="grid gap-6 xl:grid-cols-[1.1fr_.9fr]">
+                            <section class="bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm">
+                                <div class="flex items-center justify-between gap-3 mb-6">
+                                    <div><p class="section-kicker">Ringkasan bulan ini</p><h2 class="section-title">Kehadiran latihan</h2></div>
+                                    <span id="dashboard-bulan" class="text-xs font-bold text-purple-700 bg-purple-50 px-3 py-2 rounded-xl"></span>
+                                </div>
+                                <div id="grafik-kehadiran" class="space-y-5"><p class="text-sm text-slate-400">Memuat grafik...</p></div>
+                            </section>
+                            <section class="bg-purple-950 rounded-3xl p-5 sm:p-6 text-white shadow-xl">
+                                <p class="text-pink-300 text-xs font-bold uppercase tracking-widest">Catatan</p>
+                                <h2 class="text-2xl font-black mt-3">Kelola kegiatan dengan lebih teratur.</h2>
+                                <p class="text-sm text-purple-100 mt-3 leading-relaxed">Gunakan menu di samping untuk mengisi data satu per satu. Perubahan akan langsung tersimpan ke sistem.</p>
+                                <a href="/absensi.html" class="inline-block mt-6 rounded-xl bg-white px-4 py-3 text-xs font-bold text-purple-900 hover:bg-pink-100">Buka halaman absensi</a>
+                            </section>
+                        </div>
+                        <section class="bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm">
+                            <div class="mb-5"><p class="section-kicker">Rekap siswa</p><h2 class="section-title">Kehadiran bulan ini</h2></div>
+                            <div class="overflow-x-auto"><table class="w-full text-left text-sm"><thead><tr class="border-b border-pink-100 text-xs uppercase text-slate-400"><th class="p-3">Nama siswa</th><th class="p-3 text-center">Hadir</th><th class="p-3 text-center">Izin</th><th class="p-3 text-center">Alpha</th><th class="p-3 text-center">Persentase</th></tr></thead><tbody id="dashboard-rekap" class="divide-y divide-pink-100"><tr><td colspan="5" class="p-5 text-center text-slate-400">Memuat rekap...</td></tr></tbody></table></div>
+                        </section>
+                    </div>
+                    <div id="form-pages" class="space-y-6">
+                <form id="form-siswa" data-page="siswa" data-endpoint="siswa" data-category="siswa" class="admin-page admin-form hidden bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm space-y-3">
                     <h2 class="text-xl font-black uppercase text-purple-950 mb-4">Tambah Siswa</h2>
                     <input name="nama" required placeholder="Nama lengkap" class="field">
                     <input name="alamat" required placeholder="Alamat / domisili" class="field">
@@ -67,7 +95,7 @@
                     <input name="foto" type="file" accept="image/jpeg,image/png,image/webp" class="field">
                     <button class="submit-button">Simpan Siswa</button>
                 </form>
-                <form id="form-pengurus" data-endpoint="pengurus" data-category="pengurus" class="admin-form bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm space-y-3">
+                <form id="form-pengurus" data-page="pengurus" data-endpoint="pengurus" data-category="pengurus" class="admin-page admin-form hidden bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm space-y-3">
                     <h2 class="text-xl font-black uppercase text-purple-950 mb-4">Tambah Pengurus</h2>
                     <input name="jabatan" required placeholder="Jabatan" class="field">
                     <input name="nama" required placeholder="Nama" class="field">
@@ -75,7 +103,7 @@
                     <input name="foto" type="file" accept="image/jpeg,image/png,image/webp" class="field">
                     <button class="submit-button">Simpan Pengurus</button>
                 </form>
-                <form id="form-pelatih" data-endpoint="pelatih" data-category="pelatih" class="admin-form bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm space-y-3">
+                <form id="form-pelatih" data-page="pelatih" data-endpoint="pelatih" data-category="pelatih" class="admin-page admin-form hidden bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm space-y-3">
                     <h2 class="text-xl font-black uppercase text-purple-950 mb-4">Tambah Pelatih</h2>
                     <input name="nama" required placeholder="Nama" class="field">
                     <input name="tingkatan" required placeholder="Tingkatan" class="field">
@@ -85,7 +113,7 @@
                     <input name="foto" type="file" accept="image/jpeg,image/png,image/webp" class="field">
                     <button class="submit-button">Simpan Pelatih</button>
                 </form>
-                <form id="form-jadwal" class="bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm space-y-3">
+                <form id="form-jadwal" data-page="jadwal" class="admin-page hidden bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm space-y-3">
                     <div class="flex items-center justify-between gap-3">
                         <h2 class="text-xl font-black uppercase text-purple-950">Jadwal Latihan</h2>
                         <button type="button" id="tambah-jadwal" class="text-xs font-bold text-purple-700">+ Tambah</button>
@@ -93,14 +121,14 @@
                     <div id="jadwal-list" class="space-y-3"></div>
                     <button class="submit-button">Simpan Jadwal</button>
                 </form>
-                <form id="form-absensi" data-endpoint="absensi" class="admin-form bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm space-y-3">
+                <form id="form-absensi" data-page="absensi" data-endpoint="absensi" class="admin-page admin-form hidden bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm space-y-3">
                     <h2 class="text-xl font-black uppercase text-purple-950 mb-4">Input Absensi</h2>
                     <select id="siswa-absensi" name="siswa_id" required class="field"><option value="">Pilih siswa</option></select>
                     <input name="tanggal" type="date" required class="field">
                     <select name="status" required class="field"><option value="hadir">Hadir</option><option value="izin">Izin</option><option value="alpha">Alpha</option></select>
                     <button class="submit-button">Simpan Absensi</button>
                 </form>
-                <form id="form-penilaian" data-endpoint="penilaian" class="admin-form bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm space-y-3">
+                <form id="form-penilaian" data-page="penilaian" data-endpoint="penilaian" class="admin-page admin-form hidden bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm space-y-3">
                     <h2 class="text-xl font-black uppercase text-purple-950 mb-4">Input Penilaian</h2>
                     <select id="siswa-penilaian" name="siswa_id" required class="field"><option value="">Pilih siswa</option></select>
                     <input name="periode_bulan" required placeholder="Periode, contoh: Juni 2026" class="field">
@@ -109,7 +137,7 @@
                     <input name="predikat" required placeholder="Predikat, contoh: Baik" class="field">
                     <button class="submit-button">Simpan Penilaian</button>
                 </form>
-                <form id="form-ujian" data-endpoint="ujian" class="admin-form bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm space-y-3">
+                <form id="form-ujian" data-page="ujian" data-endpoint="ujian" class="admin-page admin-form hidden bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm space-y-3">
                     <h2 class="text-xl font-black uppercase text-purple-950 mb-4">Input Ujian</h2>
                     <select id="siswa-ujian" name="siswa_id" required class="field"><option value="">Pilih siswa</option></select>
                     <input name="periode" type="date" required class="field">
@@ -130,6 +158,14 @@
         .submit-button { width: 100%; border-radius: .75rem; background: #6b21a8; color: white; padding: .75rem 1rem; font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
         .admin-nav-link { display: block; white-space: nowrap; border-radius: .75rem; padding: .65rem .75rem; color: #ede9fe; font-size: .75rem; font-weight: 700; }
         .admin-nav-link:hover, .admin-nav-link:focus-visible { background: rgba(255, 255, 255, .12); color: white; outline: none; }
+        .admin-nav-link.active { background: #fbcfe8; color: #4c1d95; }
+        .stat-card { border: 1px solid #fbcfe8; border-radius: 1.5rem; background: white; padding: 1.25rem; box-shadow: 0 1px 2px rgba(76, 29, 149, .04); }
+        .stat-card span { display: block; color: #64748b; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+        .stat-card strong { display: block; color: #2e1065; font-size: 2rem; line-height: 1; margin-top: .75rem; }
+        .section-kicker { color: #db2777; font-size: .65rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+        .section-title { color: #2e1065; font-size: 1.35rem; font-weight: 900; margin-top: .35rem; }
+        .chart-track { height: .7rem; overflow: hidden; border-radius: 999px; background: #f1f5f9; }
+        .chart-bar { height: 100%; border-radius: inherit; transition: width .3s ease; }
         @media (min-width: 1024px) { .admin-nav-link { margin: .125rem 0; } }
     </style>
     <script>
@@ -151,6 +187,7 @@
             dashboardPanel.classList.remove('hidden');
             loadStudentsIntoForms();
             loadJadwal();
+            showPage(window.location.hash.slice(1) || 'dashboard');
         });
 
         document.querySelectorAll('.admin-form').forEach((form) => form.addEventListener('submit', async (event) => {
@@ -205,8 +242,31 @@
                 dashboardPanel.classList.remove('hidden');
                 loadStudentsIntoForms();
                 loadJadwal();
+                showPage(window.location.hash.slice(1) || 'dashboard');
             }
         });
+
+        document.querySelectorAll('.admin-nav-link').forEach((link) => link.addEventListener('click', (event) => {
+            event.preventDefault();
+            const page = link.dataset.page;
+            window.location.hash = page;
+            showPage(page);
+        }));
+        window.addEventListener('hashchange', () => showPage(window.location.hash.slice(1) || 'dashboard'));
+
+        function showPage(page) {
+            const validPages = ['dashboard', 'siswa', 'pengurus', 'pelatih', 'jadwal', 'absensi', 'penilaian', 'ujian'];
+            const activePage = validPages.includes(page) ? page : 'dashboard';
+            document.querySelectorAll('.admin-page').forEach((element) => {
+                element.classList.toggle('hidden', element.dataset.page !== activePage);
+            });
+            document.querySelectorAll('.admin-nav-link').forEach((link) => {
+                link.classList.toggle('active', link.dataset.page === activePage);
+            });
+            const titles = { dashboard: 'Dashboard Ranting', siswa: 'Data Siswa', pengurus: 'Data Pengurus', pelatih: 'Data Pelatih', jadwal: 'Jadwal Latihan', absensi: 'Input Absensi', penilaian: 'Input Penilaian', ujian: 'Input Ujian' };
+            document.getElementById('page-title').textContent = titles[activePage];
+            if (activePage === 'dashboard') loadDashboard();
+        }
 
         async function loadStudentsIntoForms() {
             const response = await fetch('/api/siswa');
@@ -221,6 +281,47 @@
                     select.appendChild(option);
                 });
             });
+        }
+
+        async function loadDashboard() {
+            const bulan = new Date().toISOString().slice(0, 7);
+            document.getElementById('dashboard-bulan').textContent = new Intl.DateTimeFormat('id-ID', {month: 'long', year: 'numeric'}).format(new Date());
+            try {
+                const responses = await Promise.all([
+                    fetch('/api/siswa'),
+                    fetch('/api/pengurus'),
+                    fetch('/api/pelatih'),
+                    fetch('/api/absensi?bulan=' + bulan + '&rekap=true')
+                ]);
+                if (responses.some((response) => !response.ok)) throw new Error('Dashboard gagal dimuat');
+                const [siswa, pengurus, pelatih, rekap] = await Promise.all(responses.map((response) => response.json()));
+                document.getElementById('stat-siswa').textContent = siswa.length;
+                document.getElementById('stat-pengurus').textContent = pengurus.length;
+                document.getElementById('stat-pelatih').textContent = pelatih.filter((item) => String(item.status).toLowerCase() === 'aktif').length;
+                document.getElementById('stat-sesi').textContent = rekap.reduce((total, item) => Math.max(total, item.sesi), 0);
+                renderAttendanceChart(rekap);
+                const rekapBySiswa = Object.fromEntries(rekap.map((item) => [item.siswa_id, item]));
+                document.getElementById('dashboard-rekap').innerHTML = siswa.map((item) => {
+                    const summary = rekapBySiswa[item.id] || {hadir: 0, izin: 0, alpha: 0, persentase: 0};
+                    return `<tr><td class="p-3 font-bold text-purple-950">${escapeHTML(item.nama)}</td><td class="p-3 text-center">${summary.hadir}</td><td class="p-3 text-center">${summary.izin}</td><td class="p-3 text-center">${summary.alpha}</td><td class="p-3 text-center font-bold">${Number(summary.persentase).toFixed(0)}%</td></tr>`;
+                }).join('') || '<tr><td colspan="5" class="p-5 text-center text-slate-400">Belum ada data siswa.</td></tr>';
+            } catch (error) {
+                document.getElementById('grafik-kehadiran').innerHTML = '<p class="text-sm text-rose-500">Rekap belum bisa dimuat.</p>';
+                document.getElementById('dashboard-rekap').innerHTML = '<tr><td colspan="5" class="p-5 text-center text-rose-500">Dashboard belum bisa memuat data.</td></tr>';
+            }
+        }
+
+        function renderAttendanceChart(rekap) {
+            const totals = rekap.reduce((result, item) => ({
+                hadir: result.hadir + item.hadir,
+                izin: result.izin + item.izin,
+                alpha: result.alpha + item.alpha
+            }), {hadir: 0, izin: 0, alpha: 0});
+            const total = totals.hadir + totals.izin + totals.alpha || 1;
+            const labels = {hadir: ['Hadir', 'bg-green-500'], izin: ['Izin', 'bg-amber-400'], alpha: ['Alpha', 'bg-rose-500']};
+            document.getElementById('grafik-kehadiran').innerHTML = Object.entries(totals).map(([status, jumlah]) => `
+                <div><div class="flex justify-between text-sm mb-2"><span class="font-bold text-slate-700">${labels[status][0]}</span><span class="font-bold text-slate-500">${jumlah}</span></div><div class="chart-track"><div class="chart-bar ${labels[status][1]}" style="width: ${(jumlah / total) * 100}%"></div></div></div>
+            `).join('');
         }
 
         function tambahJadwalInput(jadwal = {hari: '', waktu: ''}) {
