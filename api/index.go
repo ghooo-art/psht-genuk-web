@@ -46,6 +46,12 @@ type RekapAbsensi struct {
 	Sesi    int     `json:"sesi"`
 }
 
+type AbsensiHarian struct {
+	Nama   string `json:"nama"`
+	Sabuk  string `json:"sabuk"`
+	Status string `json:"status"`
+}
+
 type Penilaian struct {
 	ID           string `json:"id"`
 	SiswaID      string `json:"siswa_id"`
@@ -123,28 +129,54 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 			json.NewEncoder(w).Encode(map[string]string{"status": "sukses"})
 		}
 	case "/api/admin/siswa":
-		if requireAdmin(w, r) && r.Method == http.MethodPost {
-			createSiswa(w, r)
+		if requireAdmin(w, r) {
+			if r.Method == http.MethodPost {
+				createSiswa(w, r)
+			} else if r.Method == http.MethodPut {
+				updateResource(w, r, "siswa")
+			} else if r.Method == http.MethodDelete {
+				deleteResource(w, r, "siswa")
+			}
 		}
 	case "/api/admin/pengurus":
-		if requireAdmin(w, r) && r.Method == http.MethodPost {
-			createPengurus(w, r)
+		if requireAdmin(w, r) {
+			if r.Method == http.MethodPost {
+				createPengurus(w, r)
+			} else if r.Method == http.MethodPut {
+				updateResource(w, r, "pengurus")
+			} else if r.Method == http.MethodDelete {
+				deleteResource(w, r, "pengurus")
+			}
 		}
 	case "/api/admin/pelatih":
-		if requireAdmin(w, r) && r.Method == http.MethodPost {
-			createPelatih(w, r)
+		if requireAdmin(w, r) {
+			if r.Method == http.MethodPost {
+				createPelatih(w, r)
+			} else if r.Method == http.MethodPut {
+				updateResource(w, r, "pelatih")
+			} else if r.Method == http.MethodDelete {
+				deleteResource(w, r, "pelatih")
+			}
 		}
 	case "/api/admin/absensi":
 		if requireAdmin(w, r) && r.Method == http.MethodPost {
 			simpanAbsensi(w, r)
 		}
 	case "/api/admin/penilaian":
-		if requireAdmin(w, r) && r.Method == http.MethodPost {
-			createPenilaian(w, r)
+		if requireAdmin(w, r) {
+			if r.Method == http.MethodPost {
+				createPenilaian(w, r)
+			} else if r.Method == http.MethodDelete {
+				deleteResource(w, r, "penilaian")
+			}
 		}
 	case "/api/admin/ujian":
-		if requireAdmin(w, r) && r.Method == http.MethodPost {
-			createUjian(w, r)
+		if requireAdmin(w, r) {
+			if r.Method == http.MethodPost {
+				createUjian(w, r)
+			} else if r.Method == http.MethodDelete {
+				deleteResource(w, r, "ujian")
+			}
 		}
 	case "/api/admin/upload":
 		if requireAdmin(w, r) && r.Method == http.MethodPost {
@@ -520,6 +552,10 @@ func simpanAbsensi(w http.ResponseWriter, r *http.Request) {
 }
 
 func getAbsensiBulan(w http.ResponseWriter, r *http.Request) {
+	if tanggal := r.URL.Query().Get("tanggal"); tanggal != "" {
+		getAbsensiHarian(w, tanggal)
+		return
+	}
 	bulan := r.URL.Query().Get("bulan")
 	start, err := time.Parse("2006-01", bulan)
 	if err != nil {
@@ -558,6 +594,36 @@ func getAbsensiBulan(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		results = append(results, map[string]string{"tanggal": tanggal.Format("2006-01-02"), "status": status})
+	}
+	json.NewEncoder(w).Encode(results)
+}
+
+func getAbsensiHarian(w http.ResponseWriter, tanggal string) {
+	parsed, err := time.Parse("2006-01-02", tanggal)
+	if err != nil {
+		http.Error(w, `{"error":"Format tanggal harus YYYY-MM-DD"}`, http.StatusBadRequest)
+		return
+	}
+	db, err := connectDB()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+	rows, err := db.Query(`SELECT s.nama, s.sabuk, a.status FROM absensi a JOIN siswa s ON s.id = a.siswa_id WHERE a.tanggal = $1 ORDER BY s.nama`, parsed)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+	results := make([]AbsensiHarian, 0)
+	for rows.Next() {
+		var item AbsensiHarian
+		if err := rows.Scan(&item.Nama, &item.Sabuk, &item.Status); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		results = append(results, item)
 	}
 	json.NewEncoder(w).Encode(results)
 }
@@ -713,6 +779,66 @@ func simpanJadwal(w http.ResponseWriter, r *http.Request) {
 	}
 	if err = tx.Commit(); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	json.NewEncoder(w).Encode(map[string]string{"status": "sukses"})
+}
+
+func deleteResource(w http.ResponseWriter, r *http.Request, resource string) {
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		http.Error(w, `{"error":"ID data wajib diisi"}`, http.StatusBadRequest)
+		return
+	}
+	tables := map[string]string{"siswa": "siswa", "pengurus": "pengurus", "pelatih": "pelatih", "penilaian": "penilaian", "ujian": "ujian"}
+	table, ok := tables[resource]
+	if !ok {
+		http.Error(w, `{"error":"Jenis data tidak valid"}`, http.StatusBadRequest)
+		return
+	}
+	db, err := connectDB()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+	if _, err = db.Exec("DELETE FROM "+table+" WHERE id = $1", id); err != nil {
+		http.Error(w, err.Error(), http.StatusConflict)
+		return
+	}
+	json.NewEncoder(w).Encode(map[string]string{"status": "sukses"})
+}
+
+func updateResource(w http.ResponseWriter, r *http.Request, resource string) {
+	var data map[string]interface{}
+	if json.NewDecoder(r.Body).Decode(&data) != nil || data["id"] == nil {
+		http.Error(w, `{"error":"Data edit tidak valid"}`, http.StatusBadRequest)
+		return
+	}
+	db, err := connectDB()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+	var query string
+	var args []interface{}
+	switch resource {
+	case "siswa":
+		query = "UPDATE siswa SET nama=$1, alamat=$2, tempat_lahir=$3, tanggal_lahir=$4, sabuk=$5 WHERE id=$6"
+		args = []interface{}{data["nama"], data["alamat"], data["tempat_lahir"], data["tanggal_lahir"], data["sabuk"], data["id"]}
+	case "pengurus":
+		query = "UPDATE pengurus SET jabatan=$1, nama=$2, keterangan=$3 WHERE id=$4"
+		args = []interface{}{data["jabatan"], data["nama"], data["keterangan"], data["id"]}
+	case "pelatih":
+		query = "UPDATE pelatih SET nama=$1, tingkatan=$2, spesialisasi=$3, kontak=$4, status=$5 WHERE id=$6"
+		args = []interface{}{data["nama"], data["tingkatan"], data["spesialisasi"], data["kontak"], data["status"], data["id"]}
+	default:
+		http.Error(w, `{"error":"Jenis data tidak valid"}`, http.StatusBadRequest)
+		return
+	}
+	if _, err = db.Exec(query, args...); err != nil {
+		http.Error(w, err.Error(), http.StatusConflict)
 		return
 	}
 	json.NewEncoder(w).Encode(map[string]string{"status": "sukses"})

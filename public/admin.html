@@ -6,7 +6,7 @@
     <title>Admin - PSHT Ranting Genuk</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="min-h-screen bg-[#FDF8FA] text-slate-800 font-sans">
+    <body class="min-h-screen bg-[#FDF8FA] text-slate-800 font-sans">
     <main class="min-h-screen flex items-center justify-center p-4 sm:p-6">
         <section id="login-panel" class="w-full max-w-md bg-white rounded-3xl border border-pink-200 shadow-xl p-6 sm:p-8">
             <div class="mb-8">
@@ -167,6 +167,26 @@
         .chart-track { height: .7rem; overflow: hidden; border-radius: 999px; background: #f1f5f9; }
         .chart-bar { height: 100%; border-radius: inherit; transition: width .3s ease; }
         @media (min-width: 1024px) { .admin-nav-link { margin: .125rem 0; } }
+        @media (max-width: 1023px) {
+            body { overflow-x: hidden; }
+            #dashboard-panel { padding-top: .75rem; padding-bottom: 1.5rem; }
+            #dashboard-panel > .grid { gap: 1rem; }
+            #dashboard-panel aside { border-radius: 1.25rem; padding: 1rem; }
+            #dashboard-panel aside nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .35rem; overflow: visible; }
+            #dashboard-panel .admin-nav-link { padding: .7rem .65rem; text-align: center; }
+            #dashboard-panel aside > div:last-child { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: .75rem; padding-top: .75rem; }
+            #dashboard-panel aside > div:last-child button { margin-top: 0; }
+            #form-pages .admin-page { border-radius: 1.25rem; padding: 1rem; }
+            .stat-card { padding: 1rem; }
+            .stat-card strong { font-size: 1.7rem; }
+        }
+        @media (max-width: 480px) {
+            #dashboard-panel aside nav { grid-template-columns: 1fr 1fr; }
+            #dashboard-panel .section-title { font-size: 1.15rem; }
+            #dashboard-panel table { min-width: 560px; }
+            #form-jadwal .jadwal-item { flex-wrap: wrap; }
+            #form-jadwal .jadwal-item .field { min-width: 0; flex: 1 1 40%; }
+        }
     </style>
     <script>
         const loginPanel = document.getElementById('login-panel');
@@ -208,10 +228,17 @@
                 body.foto_url = uploadResult.foto_url;
             }
             delete body.foto;
-            const response = await fetch('/api/admin/' + form.dataset.endpoint, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
+            const editID = form.dataset.editId;
+            if (editID) body.id = editID;
+            const response = await fetch('/api/admin/' + form.dataset.endpoint, { method: editID ? 'PUT' : 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
             formMessage.textContent = response.ok ? 'Data berhasil disimpan.' : 'Data gagal disimpan.';
             formMessage.className = response.ok ? 'mt-6 text-sm font-bold text-green-700' : 'mt-6 text-sm font-bold text-rose-600';
-            if (response.ok) form.reset();
+            if (response.ok) {
+                form.reset();
+                delete form.dataset.editId;
+                form.querySelector('button[type="submit"]').textContent = 'Simpan';
+                loadManagementData(form.dataset.endpoint);
+            }
         }));
 
         document.getElementById('form-jadwal').addEventListener('submit', async (event) => {
@@ -266,6 +293,7 @@
             const titles = { dashboard: 'Dashboard Ranting', siswa: 'Data Siswa', pengurus: 'Data Pengurus', pelatih: 'Data Pelatih', jadwal: 'Jadwal Latihan', absensi: 'Input Absensi', penilaian: 'Input Penilaian', ujian: 'Input Ujian' };
             document.getElementById('page-title').textContent = titles[activePage];
             if (activePage === 'dashboard') loadDashboard();
+            if (['siswa', 'pengurus', 'pelatih'].includes(activePage)) loadManagementData(activePage);
         }
 
         async function loadStudentsIntoForms() {
@@ -281,6 +309,56 @@
                     select.appendChild(option);
                 });
             });
+        }
+
+        async function loadManagementData(page) {
+            const panel = ensureManagementPanel(page);
+            panel.classList.remove('hidden');
+            const body = panel.querySelector('tbody');
+            body.innerHTML = '<tr><td colspan="4" class="p-5 text-center text-slate-400">Memuat data...</td></tr>';
+            const response = await fetch('/api/' + page);
+            if (!response.ok) {
+                body.innerHTML = '<tr><td colspan="4" class="p-5 text-center text-rose-500">Data belum bisa dimuat.</td></tr>';
+                return;
+            }
+            const data = await response.json();
+            const columns = {
+                siswa: [['nama', 'Nama'], ['sabuk', 'Sabuk'], ['alamat', 'Alamat']],
+                pengurus: [['nama', 'Nama'], ['jabatan', 'Jabatan'], ['keterangan', 'Keterangan']],
+                pelatih: [['nama', 'Nama'], ['tingkatan', 'Tingkatan'], ['status', 'Status']]
+            }[page];
+            body.innerHTML = data.length ? data.map((item) => `<tr class="border-t border-pink-100"><td class="p-3 font-bold text-purple-950">${escapeHTML(item[columns[0][0]])}</td><td class="p-3 text-slate-600">${escapeHTML(item[columns[1][0]])}</td><td class="p-3 text-slate-600">${escapeHTML(item[columns[2][0]] || '-')}</td><td class="p-3 text-right whitespace-nowrap"><button type="button" data-edit-id="${escapeHTML(item.id)}" class="mr-3 text-xs font-bold text-purple-700 hover:text-purple-900">Edit</button><button type="button" data-delete-id="${escapeHTML(item.id)}" class="text-xs font-bold text-rose-600 hover:text-rose-800">Hapus</button></td></tr>`).join('') : '<tr><td colspan="4" class="p-5 text-center text-slate-400">Belum ada data.</td></tr>';
+            body.querySelectorAll('[data-edit-id]').forEach((button) => button.addEventListener('click', () => editManagementData(page, data.find((item) => String(item.id) === button.dataset.editId))));
+            body.querySelectorAll('[data-delete-id]').forEach((button) => button.addEventListener('click', async () => {
+                if (!window.confirm('Hapus data ini?')) return;
+                const result = await fetch('/api/admin/' + page + '?id=' + encodeURIComponent(button.dataset.deleteId), {method: 'DELETE'});
+                formMessage.textContent = result.ok ? 'Data berhasil dihapus.' : 'Data gagal dihapus.';
+                formMessage.className = result.ok ? 'mt-6 text-sm font-bold text-green-700' : 'mt-6 text-sm font-bold text-rose-600';
+                if (result.ok) loadManagementData(page);
+            }));
+        }
+
+        function editManagementData(page, item) {
+            const form = document.getElementById('form-' + page);
+            form.dataset.editId = item.id;
+            Object.entries(item).forEach(([key, value]) => {
+                const field = form.querySelector(`[name="${key}"]`);
+                if (field && field.type !== 'file') field.value = value ?? '';
+            });
+            form.querySelector('button[type="submit"]').textContent = 'Simpan Perubahan';
+            form.scrollIntoView({behavior: 'smooth', block: 'start'});
+        }
+
+        function ensureManagementPanel(page) {
+            const existing = document.getElementById('list-' + page);
+            if (existing) return existing;
+            const panel = document.createElement('section');
+            panel.id = 'list-' + page;
+            panel.dataset.page = page;
+            panel.className = 'admin-page hidden bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm overflow-x-auto';
+            panel.innerHTML = `<div class="mb-4"><p class="section-kicker">Data tersimpan</p><h2 class="section-title">Daftar ${page}</h2></div><table class="w-full text-left text-sm"><thead><tr class="text-xs uppercase text-slate-400"><th class="p-3">Nama</th><th class="p-3">Info</th><th class="p-3">Keterangan</th><th class="p-3 text-right">Aksi</th></tr></thead><tbody></tbody></table>`;
+            document.getElementById('form-' + page).after(panel);
+            return panel;
         }
 
         async function loadDashboard() {
