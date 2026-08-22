@@ -1,13 +1,17 @@
 package handler
 
 import (
+	"bytes"
 	"crypto/hmac"
 	"crypto/sha256"
 	"database/sql"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -57,6 +61,7 @@ type Pengurus struct {
 	Jabatan    string `json:"jabatan"`
 	Nama       string `json:"nama"`
 	Keterangan string `json:"keterangan"`
+	FotoURL    string `json:"foto_url"`
 }
 
 // Struktur data Pelatih
@@ -67,6 +72,7 @@ type Pelatih struct {
 	Spesialisasi string `json:"spesialisasi"`
 	Kontak       string `json:"kontak"`
 	Status       string `json:"status"`
+	FotoURL      string `json:"foto_url"`
 }
 
 type adminLogin struct {
@@ -123,6 +129,10 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	case "/api/admin/ujian":
 		if requireAdmin(w, r) && r.Method == http.MethodPost {
 			createUjian(w, r)
+		}
+	case "/api/admin/upload":
+		if requireAdmin(w, r) && r.Method == http.MethodPost {
+			uploadFoto(w, r)
 		}
 	case "/api/siswa":
 		getSiswa(w, r)
@@ -216,6 +226,63 @@ func createSiswa(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"status": "sukses"})
 }
 
+func uploadFoto(w http.ResponseWriter, r *http.Request) {
+	if os.Getenv("SUPABASE_URL") == "" || os.Getenv("SUPABASE_SERVICE_ROLE_KEY") == "" {
+		http.Error(w, `{"error":"Konfigurasi Supabase Storage belum tersedia"}`, http.StatusInternalServerError)
+		return
+	}
+	if err := r.ParseMultipartForm(6 << 20); err != nil {
+		http.Error(w, `{"error":"Ukuran foto maksimal 5 MB"}`, http.StatusBadRequest)
+		return
+	}
+	file, header, err := r.FormFile("file")
+	if err != nil {
+		http.Error(w, `{"error":"File foto wajib dipilih"}`, http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	contentType := header.Header.Get("Content-Type")
+	if contentType != "image/jpeg" && contentType != "image/png" && contentType != "image/webp" {
+		http.Error(w, `{"error":"Format foto harus JPG, PNG, atau WEBP"}`, http.StatusBadRequest)
+		return
+	}
+	data, err := io.ReadAll(io.LimitReader(file, 5<<20+1))
+	if err != nil || len(data) > 5<<20 {
+		http.Error(w, `{"error":"Ukuran foto maksimal 5 MB"}`, http.StatusBadRequest)
+		return
+	}
+
+	category := r.FormValue("category")
+	if category != "siswa" && category != "pelatih" && category != "pengurus" {
+		http.Error(w, `{"error":"Kategori foto tidak valid"}`, http.StatusBadRequest)
+		return
+	}
+	ext := filepath.Ext(header.Filename)
+	path := fmt.Sprintf("%s/%d%s", category, time.Now().UnixNano(), ext)
+	uploadURL := fmt.Sprintf("%s/storage/v1/object/psht-foto/%s", strings.TrimRight(os.Getenv("SUPABASE_URL"), "/"), path)
+	req, err := http.NewRequest(http.MethodPost, uploadURL, bytes.NewReader(data))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	req.Header.Set("Authorization", "Bearer "+os.Getenv("SUPABASE_SERVICE_ROLE_KEY"))
+	req.Header.Set("apikey", os.Getenv("SUPABASE_SERVICE_ROLE_KEY"))
+	req.Header.Set("Content-Type", contentType)
+	req.Header.Set("x-upsert", "true")
+	response, err := http.DefaultClient.Do(req)
+	if err != nil || response.StatusCode < 200 || response.StatusCode >= 300 {
+		if response != nil {
+			response.Body.Close()
+		}
+		http.Error(w, `{"error":"Gagal mengunggah foto ke Supabase Storage"}`, http.StatusBadGateway)
+		return
+	}
+	response.Body.Close()
+	publicURL := fmt.Sprintf("%s/storage/v1/object/public/psht-foto/%s", strings.TrimRight(os.Getenv("SUPABASE_URL"), "/"), path)
+	json.NewEncoder(w).Encode(map[string]string{"foto_url": publicURL})
+}
+
 func createPengurus(w http.ResponseWriter, r *http.Request) {
 	var p Pengurus
 	if json.NewDecoder(r.Body).Decode(&p) != nil || p.Nama == "" || p.Jabatan == "" {
@@ -228,7 +295,7 @@ func createPengurus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer db.Close()
-	_, err = db.Exec("INSERT INTO pengurus (jabatan, nama, keterangan) VALUES ($1, $2, $3)", p.Jabatan, p.Nama, p.Keterangan)
+	_, err = db.Exec("INSERT INTO pengurus (jabatan, nama, keterangan, foto_url) VALUES ($1, $2, $3, $4)", p.Jabatan, p.Nama, p.Keterangan, p.FotoURL)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -248,7 +315,7 @@ func createPelatih(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer db.Close()
-	_, err = db.Exec("INSERT INTO pelatih (nama, tingkatan, spesialisasi, kontak, status) VALUES ($1, $2, $3, $4, $5)", p.Nama, p.Tingkatan, p.Spesialisasi, p.Kontak, p.Status)
+	_, err = db.Exec("INSERT INTO pelatih (nama, tingkatan, spesialisasi, kontak, status, foto_url) VALUES ($1, $2, $3, $4, $5, $6)", p.Nama, p.Tingkatan, p.Spesialisasi, p.Kontak, p.Status, p.FotoURL)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -450,7 +517,7 @@ func getPengurus(w http.ResponseWriter, r *http.Request) {
 	}
 	defer db.Close()
 
-	rows, err := db.Query("SELECT id, jabatan, nama, keterangan FROM pengurus")
+	rows, err := db.Query("SELECT id, jabatan, nama, keterangan, foto_url FROM pengurus")
 	if err != nil {
 		http.Error(w, `{"error": "`+err.Error()+`"}`, http.StatusInternalServerError)
 		return
@@ -460,7 +527,7 @@ func getPengurus(w http.ResponseWriter, r *http.Request) {
 	var listPengurus []Pengurus
 	for rows.Next() {
 		var p Pengurus
-		if err := rows.Scan(&p.ID, &p.Jabatan, &p.Nama, &p.Keterangan); err != nil {
+		if err := rows.Scan(&p.ID, &p.Jabatan, &p.Nama, &p.Keterangan, &p.FotoURL); err != nil {
 			continue
 		}
 		listPengurus = append(listPengurus, p)
@@ -478,7 +545,7 @@ func getPelatih(w http.ResponseWriter, r *http.Request) {
 	}
 	defer db.Close()
 
-	rows, err := db.Query("SELECT id, nama, tingkatan, spesialisasi, kontak, status FROM pelatih")
+	rows, err := db.Query("SELECT id, nama, tingkatan, spesialisasi, kontak, status, foto_url FROM pelatih")
 	if err != nil {
 		http.Error(w, `{"error": "`+err.Error()+`"}`, http.StatusInternalServerError)
 		return
@@ -488,7 +555,7 @@ func getPelatih(w http.ResponseWriter, r *http.Request) {
 	var listPelatih []Pelatih
 	for rows.Next() {
 		var l Pelatih
-		if err := rows.Scan(&l.ID, &l.Nama, &l.Tingkatan, &l.Spesialisasi, &l.Kontak, &l.Status); err != nil {
+		if err := rows.Scan(&l.ID, &l.Nama, &l.Tingkatan, &l.Spesialisasi, &l.Kontak, &l.Status, &l.FotoURL); err != nil {
 			continue
 		}
 		listPelatih = append(listPelatih, l)
