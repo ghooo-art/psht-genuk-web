@@ -27,16 +27,37 @@
             <a href="/" class="block mt-6 text-center text-xs font-bold text-purple-700 hover:text-pink-600">Kembali ke halaman utama</a>
         </section>
 
-        <section id="dashboard-panel" class="hidden w-full max-w-5xl self-start py-6 sm:py-10">
-            <header class="flex flex-col sm:flex-row justify-between gap-4 mb-8">
-                <div>
-                    <p class="text-pink-500 font-mono text-xs uppercase tracking-widest font-bold">Halaman Pengurus</p>
-                    <h1 class="text-3xl font-black uppercase text-purple-950 mt-2">Kelola Data Ranting</h1>
-                </div>
-                <button id="logout-button" class="self-start rounded-xl border border-pink-200 bg-white px-4 py-2 text-xs font-bold uppercase text-purple-800">Keluar</button>
-            </header>
-            <div class="grid gap-6 lg:grid-cols-3">
-                <form data-endpoint="siswa" data-category="siswa" class="admin-form bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm space-y-3">
+        <section id="dashboard-panel" class="hidden w-full max-w-7xl self-start py-6 sm:py-10">
+            <div class="grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:items-start">
+                <aside class="lg:sticky lg:top-6 bg-purple-950 text-white rounded-3xl p-5 shadow-xl">
+                    <div class="mb-5">
+                        <p class="text-pink-300 text-[10px] font-bold uppercase tracking-[0.2em]">Menu Pengurus</p>
+                        <p class="mt-2 text-sm text-purple-100">Pilih formulir yang ingin diisi.</p>
+                    </div>
+                    <nav class="flex gap-2 overflow-x-auto lg:block lg:space-y-1" aria-label="Navigasi data admin">
+                        <a href="#form-siswa" class="admin-nav-link">Siswa</a>
+                        <a href="#form-pengurus" class="admin-nav-link">Pengurus</a>
+                        <a href="#form-pelatih" class="admin-nav-link">Pelatih</a>
+                        <a href="#form-jadwal" class="admin-nav-link">Jadwal</a>
+                        <a href="#form-absensi" class="admin-nav-link">Absensi</a>
+                        <a href="#form-penilaian" class="admin-nav-link">Penilaian</a>
+                        <a href="#form-ujian" class="admin-nav-link">Ujian</a>
+                    </nav>
+                    <div class="mt-5 border-t border-white/15 pt-4">
+                        <a href="/" class="block text-xs font-bold text-pink-200 hover:text-white">Lihat halaman utama</a>
+                        <button id="logout-button" class="mt-3 text-xs font-bold text-white/70 hover:text-white">Keluar dari admin</button>
+                    </div>
+                </aside>
+
+                <div class="min-w-0">
+                    <header class="flex flex-col sm:flex-row justify-between gap-4 mb-8">
+                        <div>
+                            <p class="text-pink-500 font-mono text-xs uppercase tracking-widest font-bold">Halaman Pengurus</p>
+                            <h1 class="text-3xl font-black uppercase text-purple-950 mt-2">Kelola Data Ranting</h1>
+                        </div>
+                    </header>
+                    <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                <form id="form-siswa" data-endpoint="siswa" data-category="siswa" class="admin-form bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm space-y-3">
                     <h2 class="text-xl font-black uppercase text-purple-950 mb-4">Tambah Siswa</h2>
                     <input name="nama" required placeholder="Nama lengkap" class="field">
                     <input name="alamat" required placeholder="Alamat / domisili" class="field">
@@ -46,7 +67,7 @@
                     <input name="foto" type="file" accept="image/jpeg,image/png,image/webp" class="field">
                     <button class="submit-button">Simpan Siswa</button>
                 </form>
-                <form data-endpoint="pengurus" data-category="pengurus" class="admin-form bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm space-y-3">
+                <form id="form-pengurus" data-endpoint="pengurus" data-category="pengurus" class="admin-form bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm space-y-3">
                     <h2 class="text-xl font-black uppercase text-purple-950 mb-4">Tambah Pengurus</h2>
                     <input name="jabatan" required placeholder="Jabatan" class="field">
                     <input name="nama" required placeholder="Nama" class="field">
@@ -54,7 +75,7 @@
                     <input name="foto" type="file" accept="image/jpeg,image/png,image/webp" class="field">
                     <button class="submit-button">Simpan Pengurus</button>
                 </form>
-                <form data-endpoint="pelatih" data-category="pelatih" class="admin-form bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm space-y-3">
+                <form id="form-pelatih" data-endpoint="pelatih" data-category="pelatih" class="admin-form bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm space-y-3">
                     <h2 class="text-xl font-black uppercase text-purple-950 mb-4">Tambah Pelatih</h2>
                     <input name="nama" required placeholder="Nama" class="field">
                     <input name="tingkatan" required placeholder="Tingkatan" class="field">
@@ -64,7 +85,7 @@
                     <input name="foto" type="file" accept="image/jpeg,image/png,image/webp" class="field">
                     <button class="submit-button">Simpan Pelatih</button>
                 </form>
-                <form id="jadwal-form" class="bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm space-y-3">
+                <form id="form-jadwal" class="bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm space-y-3">
                     <div class="flex items-center justify-between gap-3">
                         <h2 class="text-xl font-black uppercase text-purple-950">Jadwal Latihan</h2>
                         <button type="button" id="tambah-jadwal" class="text-xs font-bold text-purple-700">+ Tambah</button>
@@ -72,14 +93,14 @@
                     <div id="jadwal-list" class="space-y-3"></div>
                     <button class="submit-button">Simpan Jadwal</button>
                 </form>
-                <form data-endpoint="absensi" class="admin-form bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm space-y-3">
+                <form id="form-absensi" data-endpoint="absensi" class="admin-form bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm space-y-3">
                     <h2 class="text-xl font-black uppercase text-purple-950 mb-4">Input Absensi</h2>
                     <select id="siswa-absensi" name="siswa_id" required class="field"><option value="">Pilih siswa</option></select>
                     <input name="tanggal" type="date" required class="field">
                     <select name="status" required class="field"><option value="hadir">Hadir</option><option value="izin">Izin</option><option value="alpha">Alpha</option></select>
                     <button class="submit-button">Simpan Absensi</button>
                 </form>
-                <form data-endpoint="penilaian" class="admin-form bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm space-y-3">
+                <form id="form-penilaian" data-endpoint="penilaian" class="admin-form bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm space-y-3">
                     <h2 class="text-xl font-black uppercase text-purple-950 mb-4">Input Penilaian</h2>
                     <select id="siswa-penilaian" name="siswa_id" required class="field"><option value="">Pilih siswa</option></select>
                     <input name="periode_bulan" required placeholder="Periode, contoh: Juni 2026" class="field">
@@ -88,7 +109,7 @@
                     <input name="predikat" required placeholder="Predikat, contoh: Baik" class="field">
                     <button class="submit-button">Simpan Penilaian</button>
                 </form>
-                <form data-endpoint="ujian" class="admin-form bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm space-y-3">
+                <form id="form-ujian" data-endpoint="ujian" class="admin-form bg-white rounded-3xl border border-pink-200 p-5 sm:p-6 shadow-sm space-y-3">
                     <h2 class="text-xl font-black uppercase text-purple-950 mb-4">Input Ujian</h2>
                     <select id="siswa-ujian" name="siswa_id" required class="field"><option value="">Pilih siswa</option></select>
                     <input name="periode" type="date" required class="field">
@@ -97,14 +118,19 @@
                     <textarea name="catatan" placeholder="Catatan ujian" class="field min-h-24"></textarea>
                     <button class="submit-button">Simpan Ujian</button>
                 </form>
+                    </div>
+                    <p id="form-message" class="mt-6 text-sm font-bold"></p>
+                </div>
             </div>
-            <p id="form-message" class="mt-6 text-sm font-bold"></p>
         </section>
     </main>
     <style>
         .field { width: 100%; border: 1px solid #fbcfe8; border-radius: .75rem; padding: .7rem 1rem; outline: none; }
         .field:focus { box-shadow: 0 0 0 2px #7e22ce; }
         .submit-button { width: 100%; border-radius: .75rem; background: #6b21a8; color: white; padding: .75rem 1rem; font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+        .admin-nav-link { display: block; white-space: nowrap; border-radius: .75rem; padding: .65rem .75rem; color: #ede9fe; font-size: .75rem; font-weight: 700; }
+        .admin-nav-link:hover, .admin-nav-link:focus-visible { background: rgba(255, 255, 255, .12); color: white; outline: none; }
+        @media (min-width: 1024px) { .admin-nav-link { margin: .125rem 0; } }
     </style>
     <script>
         const loginPanel = document.getElementById('login-panel');
@@ -151,7 +177,7 @@
             if (response.ok) form.reset();
         }));
 
-        document.getElementById('jadwal-form').addEventListener('submit', async (event) => {
+        document.getElementById('form-jadwal').addEventListener('submit', async (event) => {
             event.preventDefault();
             const items = [...document.querySelectorAll('#jadwal-list .jadwal-item')].map((item) => ({
                 hari: item.querySelector('[name="hari"]').value,
